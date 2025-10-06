@@ -83,6 +83,17 @@ export const ControlPanel = ({
             <h3>Layout Settings</h3>
             
             <div className="setting-group">
+              <label htmlFor="title">Title:</label>
+              <input
+                id="title"
+                type="text"
+                value={settings.title || ''}
+                onChange={(e) => onSettingsChange({ title: e.target.value })}
+                placeholder="Enter choir title"
+              />
+            </div>
+
+            <div className="setting-group">
               <label htmlFor="num-rows">Number of Rows:</label>
               <input
                 id="num-rows"

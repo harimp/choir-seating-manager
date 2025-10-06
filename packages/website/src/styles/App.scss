@@ -31,6 +31,31 @@ body {
   position: relative;
 }
 
+.app-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: $spacing-md;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: $text-dark;
+    letter-spacing: -0.5px;
+    text-align: center;
+  }
+}
+
 button {
   font-family: inherit;
   cursor: pointer;

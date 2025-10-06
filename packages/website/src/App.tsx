@@ -117,6 +117,12 @@ function App() {
 
   return (
     <div className="app">
+      {settings.title && (
+        <div className="app-title">
+          <h1>{settings.title}</h1>
+        </div>
+      )}
+      
       <ControlPanel
         isOpen={isControlPanelOpen}
         onToggle={() => setIsControlPanelOpen(!isControlPanelOpen)}

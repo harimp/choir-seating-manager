@@ -15,6 +15,7 @@ export interface StageSettings {
   numberOfRows: number; // 1-10, default 3
   alignmentMode: AlignmentMode; // Toggle setting
   pianoPosition: PianoPosition; // Default 'right'
+  title?: string; // Optional title for the choir
 }
 
 export interface ChoirData {

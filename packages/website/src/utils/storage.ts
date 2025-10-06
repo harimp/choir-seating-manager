@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS: StageSettings = {
   numberOfRows: 3,
   alignmentMode: 'balanced',
   pianoPosition: 'right',
+  title: 'Choir Seating Manager',
 };
 
 export function generateId(): string {

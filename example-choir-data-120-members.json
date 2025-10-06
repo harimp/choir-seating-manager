@@ -124,7 +124,8 @@
   "settings": {
     "numberOfRows": 4,
     "alignmentMode": "balanced",
-    "pianoPosition": "right"
+    "pianoPosition": "right",
+    "title": "Grand Choir - 120 Members"
   },
   "lastUpdated": "2025-05-10T23:40:00.000Z"
 }
