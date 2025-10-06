@@ -9,6 +9,9 @@ interface MemberIconProps {
   onClick: (member: ChoirMember) => void;
   isSelected?: boolean;
   style?: React.CSSProperties;
+  iconWidth: number;
+  iconHeight: number;
+  textSize: number;
 }
 
 const VOICE_COLORS: Record<VoiceSection, string> = {
@@ -36,6 +39,9 @@ export const MemberIcon = ({
   onClick,
   isSelected = false,
   style,
+  iconWidth,
+  iconHeight,
+  textSize,
 }: MemberIconProps) => {
   const borderColor = VOICE_COLORS[member.voiceSection];
   const fillColor = lightenColor(borderColor, 50); // Lighter fill
@@ -74,8 +80,8 @@ export const MemberIcon = ({
       title={member.name}
     >
       <svg
-        width="60"
-        height="80"
+        width={iconWidth}
+        height={iconHeight}
         viewBox="0 0 60 80"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -98,7 +104,7 @@ export const MemberIcon = ({
         />
       </svg>
       
-      <div className="member-name">{member.name}</div>
+      <div className="member-name" style={{ fontSize: `${textSize}px`, fontWeight: 'bold' }}>{member.name}</div>
     </div>
   );
 };

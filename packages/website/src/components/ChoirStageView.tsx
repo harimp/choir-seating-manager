@@ -77,6 +77,49 @@ export const ChoirStageView = ({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // Calculate dynamic icon size based on member count and available space
+  const calculateIconSize = (): { width: number; height: number; textSize: number } => {
+    if (stageWidth === 0 || stageHeight === 0) {
+      return { width: 120, height: 160, textSize: 11 };
+    }
+
+    // Find maximum members in any single row
+    const membersByRow = members.reduce((acc, member) => {
+      acc[member.rowNumber] = (acc[member.rowNumber] || 0) + 1;
+      return acc;
+    }, {} as Record<number, number>);
+    
+    const maxMembersInRow = Math.max(...Object.values(membersByRow), 1);
+
+    // Calculate available space - maximize viewport usage
+    const usableWidth = stageWidth * 0.95; // Use 95% width (2.5% margins)
+    const availableWidthPerMember = usableWidth / maxMembersInRow;
+    const rowAreaHeight = stageHeight * 0.70; // Rows occupy 70% of height (up from 55%)
+    const availableHeightPerRow = rowAreaHeight / settings.numberOfRows;
+
+    // Calculate icon width - pack more efficiently
+    let iconWidth = Math.min(
+      availableWidthPerMember * 0.95,  // 95% to make icons larger (no spacing needed)
+      availableHeightPerRow * 0.80,    // 80% of row height for better vertical usage
+      150                               // maximum cap
+    );
+    iconWidth = Math.max(iconWidth, 35); // minimum 35px
+
+    // Maintain 3:4 aspect ratio (width:height)
+    const iconHeight = iconWidth * (4 / 3);
+
+    // Calculate text size: scales with icon but constrained for readability
+    const textSize = Math.max(11, Math.min(iconWidth * 0.14, 16));
+
+    return { 
+      width: Math.round(iconWidth), 
+      height: Math.round(iconHeight), 
+      textSize: Math.round(textSize) 
+    };
+  };
+
+  const iconSize = calculateIconSize();
+
 
   const handleDragStart = (member: ChoirMember) => {
     if (!stageRef.current) return;
@@ -88,7 +131,8 @@ export const ChoirStageView = ({
       member,
       members,
       settings.alignmentMode,
-      stageWidth
+      stageWidth,
+      iconSize.width
     );
     const memberYPercent = getRowY(member.rowNumber);
     const memberXPixels = (memberXPercent / 100) * rect.width;
@@ -119,8 +163,8 @@ export const ChoirStageView = ({
     const y = clientY - rect.top;
 
     // Calculate which row the cursor is currently hovering over
-    const rowAreaTop = rect.height * 0.35;
-    const rowAreaHeight = rect.height * 0.55;
+    const rowAreaTop = rect.height * 0.20;  // Match getRowY: 20% from top
+    const rowAreaHeight = rect.height * 0.70;  // Match getRowY: 70% height
     const shadowRow = getRowFromY(
       y,
       rect.height,
@@ -144,7 +188,8 @@ export const ChoirStageView = ({
           shadowRowMembers[i],
           members,
           settings.alignmentMode,
-          stageWidth
+          stageWidth,
+          iconSize.width
         );
         
         if (dropXPercent < otherMemberX) {
@@ -179,7 +224,8 @@ export const ChoirStageView = ({
       shadowMember,
       members.filter(m => m.id !== member.id).concat(shadowMember),
       settings.alignmentMode,
-      stageWidth
+      stageWidth,
+      iconSize.width
     );
     const shadowYPercent = getRowY(shadowRow);
 
@@ -261,8 +307,8 @@ export const ChoirStageView = ({
 
   // Calculate row positions
   const getRowY = (rowNumber: number): number => {
-    const rowAreaTop = 35; // Start at 35% from top
-    const rowAreaHeight = 55; // Occupy 55% of height
+    const rowAreaTop = 20; // Start at 20% from top (closer to conductor)
+    const rowAreaHeight = 70; // Occupy 70% of height (maximize viewport)
     const rowHeight = rowAreaHeight / settings.numberOfRows;
     return rowAreaTop + rowNumber * rowHeight + rowHeight / 2;
   };
@@ -297,7 +343,8 @@ export const ChoirStageView = ({
       member,
       membersForCalculation,
       settings.alignmentMode,
-      stageWidth
+      stageWidth,
+      iconSize.width
     );
 
     return {
@@ -343,6 +390,9 @@ export const ChoirStageView = ({
             onClick={handleMemberClick}
             isSelected={selectedMember === member.id}
             style={getMemberStyle(member)}
+            iconWidth={iconSize.width}
+            iconHeight={iconSize.height}
+            textSize={iconSize.textSize}
           />
         ))}
         
@@ -357,6 +407,9 @@ export const ChoirStageView = ({
             onClick={() => {}}
             isSelected={false}
             style={getShadowStyle()}
+            iconWidth={iconSize.width}
+            iconHeight={iconSize.height}
+            textSize={iconSize.textSize}
           />
         )}
       </div>

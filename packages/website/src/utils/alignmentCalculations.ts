@@ -29,7 +29,8 @@ export function calculateMemberDisplayPosition(
   member: ChoirMember,
   members: ChoirMember[],
   alignmentMode: AlignmentMode,
-  stageWidth: number
+  stageWidth: number,
+  iconWidth: number
 ): number {
   const membersByRow = groupMembersByRow(members);
   const rowMembers = (membersByRow[member.rowNumber] || [])
@@ -39,22 +40,22 @@ export function calculateMemberDisplayPosition(
   if (memberIndex === -1) return 50; // Default to center if not found
 
   if (alignmentMode === 'balanced') {
-    // Each row is independently centered
+    // Each row is independently centered - pack edge-to-edge
     const membersInRow = rowMembers.length;
-    const totalWidth = membersInRow * MEMBER_WIDTH + (membersInRow - 1) * MEMBER_SPACING;
+    const totalWidth = membersInRow * iconWidth;
     const startX = (stageWidth - totalWidth) / 2;
-    const x = startX + memberIndex * (MEMBER_WIDTH + MEMBER_SPACING) + MEMBER_WIDTH / 2;
+    const x = startX + memberIndex * iconWidth + iconWidth / 2;
     return (x / stageWidth) * 100;
   } else {
-    // Grid: align columns across all rows
+    // Grid: align columns across all rows - pack edge-to-edge
     const maxMembersInRow = Math.max(...Object.values(membersByRow).map(row => row.length));
-    const totalWidth = maxMembersInRow * MEMBER_WIDTH + (maxMembersInRow - 1) * MEMBER_SPACING;
+    const totalWidth = maxMembersInRow * iconWidth;
     const startX = (stageWidth - totalWidth) / 2;
     
     // Calculate column positions
     const columnPositions: number[] = [];
     for (let i = 0; i < maxMembersInRow; i++) {
-      const x = startX + i * (MEMBER_WIDTH + MEMBER_SPACING) + MEMBER_WIDTH / 2;
+      const x = startX + i * iconWidth + iconWidth / 2;
       columnPositions.push((x / stageWidth) * 100);
     }
     
