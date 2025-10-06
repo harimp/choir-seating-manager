@@ -1,0 +1,106 @@
+@use "sass:color";
+@use "variables.scss" as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: $text-dark;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all $transition-base;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+input, select {
+  font-family: inherit;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    border-color: $primary-color;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+.btn {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+
+  &-primary {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($primary-color, $lightness: -10%);
+    }
+  }
+
+  &-secondary {
+    background-color: $secondary-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($secondary-color, $lightness: -10%);
+    }
+  }
+
+  &-danger {
+    background-color: $danger-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($danger-color, $lightness: -10%);
+    }
+  }
+
+  &-success {
+    background-color: $success-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust($success-color, $lightness: -10%);
+    }
+  }
+}

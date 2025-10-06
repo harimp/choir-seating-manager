@@ -1,0 +1,78 @@
+.choir-stage-view {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: #f5f5f5; // Light gray
+  overflow: hidden;
+}
+
+.center-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background-color: #333;
+  transform: translateX(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.conductor-position {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  pointer-events: none;
+
+  .conductor-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.piano-position {
+  position: absolute;
+  top: 8%;
+  z-index: 5;
+  pointer-events: none;
+
+  &.piano-left {
+    left: 5%;
+  }
+
+  &.piano-right {
+    right: 5%;
+  }
+
+  .piano-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.members-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.centre-label {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  letter-spacing: 4px;
+  z-index: 5;
+  pointer-events: none;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}

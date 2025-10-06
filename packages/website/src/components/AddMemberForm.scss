@@ -1,0 +1,69 @@
+.add-member-form {
+  background-color: $bg-white;
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-md;
+  margin-bottom: $spacing-xl;
+
+  h2 {
+    margin-bottom: $spacing-lg;
+    font-size: 1.5rem;
+  }
+
+  .form-row {
+    display: flex;
+    gap: $spacing-md;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .form-group {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+
+    label {
+      margin-bottom: $spacing-sm;
+      font-weight: 500;
+      color: $text-dark;
+    }
+
+    input,
+    select {
+      padding: $spacing-sm $spacing-md;
+      border: 2px solid $border-color;
+      border-radius: $border-radius-md;
+      font-size: 1rem;
+      transition: border-color $transition-fast;
+
+      &:focus {
+        border-color: $primary-color;
+        outline: none;
+      }
+    }
+
+    input {
+      width: 100%;
+    }
+  }
+
+  button[type="submit"] {
+    margin-top: auto;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-group {
+      width: 100%;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+    }
+  }
+}
