@@ -18,6 +18,16 @@ const VOICE_COLORS: Record<VoiceSection, string> = {
   Bass: '#4169E1',    // Royal Blue
 };
 
+// Function to lighten a hex color
+const lightenColor = (hex: string, percent: number): string => {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = (num >> 16) + Math.round(((255 - (num >> 16)) * percent) / 100);
+  const g = ((num >> 8) & 0x00FF) + Math.round(((255 - ((num >> 8) & 0x00FF)) * percent) / 100);
+  const b = (num & 0x0000FF) + Math.round(((255 - (num & 0x0000FF)) * percent) / 100);
+  
+  return `#${(0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+};
+
 export const MemberIcon = ({
   member,
   onDragStart,
@@ -27,7 +37,8 @@ export const MemberIcon = ({
   isSelected = false,
   style,
 }: MemberIconProps) => {
-  const color = VOICE_COLORS[member.voiceSection];
+  const borderColor = VOICE_COLORS[member.voiceSection];
+  const fillColor = lightenColor(borderColor, 50); // Lighter fill
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,22 +79,22 @@ export const MemberIcon = ({
         viewBox="0 0 60 80"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Head circle */}
+        {/* Head - Circle */}
         <circle
           cx="30"
           cy="18"
           r="12"
-          fill={color}
-          stroke="#333"
-          strokeWidth="2"
+          fill={fillColor}
+          stroke={borderColor}
+          strokeWidth="3"
         />
         
-        {/* Body (bell shape) */}
+        {/* Body - Rounded top, flat bottom */}
         <path
-          d="M 18 30 Q 18 35, 15 50 L 15 70 Q 15 75, 20 75 L 40 75 Q 45 75, 45 70 L 45 50 Q 42 35, 42 30 Z"
-          fill={color}
-          stroke="#333"
-          strokeWidth="2"
+          d="M 15 47 Q 15 32, 30 32 Q 45 32, 45 47 L 45 70 L 15 70 Z"
+          fill={fillColor}
+          stroke={borderColor}
+          strokeWidth="3"
         />
       </svg>
       

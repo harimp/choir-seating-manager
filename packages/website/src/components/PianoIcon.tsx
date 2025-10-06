@@ -1,43 +1,8 @@
 export const PianoIcon = () => {
   return (
     <div className="piano-icon">
-      <svg
-        width="100"
-        height="80"
-        viewBox="0 0 100 80"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Piano body */}
-        <rect
-          x="10"
-          y="20"
-          width="70"
-          height="45"
-          fill="#333"
-          stroke="#000"
-          strokeWidth="2"
-          rx="3"
-        />
-        
-        {/* White keys */}
-        <rect x="15" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        <rect x="24" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        <rect x="33" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        <rect x="42" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        <rect x="51" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        <rect x="60" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        <rect x="69" y="25" width="8" height="25" fill="white" stroke="#000" strokeWidth="1" />
-        
-        {/* Black keys */}
-        <rect x="21" y="25" width="5" height="15" fill="#000" />
-        <rect x="30" y="25" width="5" height="15" fill="#000" />
-        <rect x="48" y="25" width="5" height="15" fill="#000" />
-        <rect x="57" y="25" width="5" height="15" fill="#000" />
-        <rect x="66" y="25" width="5" height="15" fill="#000" />
-        
-        {/* Piano player (simplified person) */}
-        <circle cx="88" cy="45" r="8" fill="#666" stroke="#000" strokeWidth="1.5" />
-        <line x1="88" y1="53" x2="88" y2="68" stroke="#666" strokeWidth="3" strokeLinecap="round" />
+      <svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" width="100" height="80">
+        <path d="M77.5 50.5C77.5 50.5 76.4 50.2 76 50.2 55.4 45.7 56.5 46 46.7 23L46.7 23C43.9 15.9 36.9 10.8 28.8 11 18.3 11.1 10 20 10 30.5L10 81C10 83.2 11.8 85 14 85L17 85 48 85 82 85C84.2 85 86 83.2 86 81L86 62C86 56.6 82.4 52 77.5 50.5ZM82 81 14 81 14 69 18 69 18 78 22 78 22 69 24 69 24 78 28 78 28 69 30 69 30 78 34 78 34 69 43 69 43 78 47 78 47 69 49 69 49 78 53 78 53 69 62 69 62 78 66 78 66 69 68 69 68 78 72 78 72 69 74 69 74 78 78 78 78 69 82 69 82 81Z"/>
       </svg>
     </div>
   );
