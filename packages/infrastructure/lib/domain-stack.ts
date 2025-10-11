@@ -1,16 +1,17 @@
+import { Stack, StackProps } from "aws-cdk-lib";
 import { Certificate, CertificateValidation } from "aws-cdk-lib/aws-certificatemanager";
 import { HostedZone, NsRecord, ZoneDelegationRecord } from "aws-cdk-lib/aws-route53";
 import { Construct } from "constructs";
 
-export class DomainStack extends Construct{
+export class DomainStack extends Stack{
     private CRUX_DOMAIN = "harimp.com";
 
     public hostedZone: HostedZone;
     public certificate: Certificate;
     public HOST_DOMAIN = `choir.${this.CRUX_DOMAIN}`;
 
-    constructor(scope: Construct, id: string) {
-        super(scope, id);
+    constructor(scope: Construct, id: string, props: StackProps) {
+        super(scope, id, props);
 
         // Hosted Zone for parent domain
         const parentHostedZone = HostedZone.fromLookup(this, 'ParentHostedZone', {

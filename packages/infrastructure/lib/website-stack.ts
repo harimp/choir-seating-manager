@@ -6,13 +6,16 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { DomainStack } from './domain-stack';
+import { ARecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
+
+export interface WebsiteStackProps extends cdk.StackProps {
+  domainStack: DomainStack;
+}
 
 export class WebsiteStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: WebsiteStackProps) {
     super(scope, id, props);
-
-    // Domain stack
-    const domainStack = new DomainStack(this, 'DomainStack');
 
     // S3 bucket for hosting the static website
     const websiteBucket = new s3.Bucket(this, 'ChoirSeatingWebsiteBucket', {
@@ -51,10 +54,17 @@ export class WebsiteStack extends cdk.Stack {
             ttl: cdk.Duration.minutes(5),
           },
         ],
-        domainNames: [domainStack.HOST_DOMAIN],
-        certificate: domainStack.certificate,
+        domainNames: [props.domainStack.HOST_DOMAIN],
+        certificate: props.domainStack.certificate,
       }
     );
+
+    // Route53 A Record for the CloudFront distribution
+    new ARecord(this, 'SiteAliasRecord', {
+      recordName: props.domainStack.HOST_DOMAIN,
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      zone: props.domainStack.hostedZone,
+    });
 
     // Deploy website to S3
     new s3deploy.BucketDeployment(this, 'DeployChoirSeatingWebsite', {
@@ -66,22 +76,6 @@ export class WebsiteStack extends cdk.Stack {
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
-    });
-
-    // Outputs
-    new cdk.CfnOutput(this, 'BucketName', {
-      value: websiteBucket.bucketName,
-      description: 'S3 Bucket name',
-    });
-
-    new cdk.CfnOutput(this, 'DistributionId', {
-      value: distribution.distributionId,
-      description: 'CloudFront Distribution ID',
-    });
-
-    new cdk.CfnOutput(this, 'WebsiteURL', {
-      value: `https://${distribution.distributionDomainName}`,
-      description: 'CloudFront Distribution URL',
     });
   }
 }
