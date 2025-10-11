@@ -1,11 +1,10 @@
 import { Certificate, CertificateValidation } from "aws-cdk-lib/aws-certificatemanager";
-import { HostedZone, ZoneDelegationRecord } from "aws-cdk-lib/aws-route53";
+import { HostedZone, NsRecord, ZoneDelegationRecord } from "aws-cdk-lib/aws-route53";
 import { Construct } from "constructs";
 
 export class DomainStack extends Construct{
     private CRUX_DOMAIN = "harimp.com";
     private HOST_DOMAIN = `choir.${this.CRUX_DOMAIN}`;
-    private HOSTED_ZONE_ID = "Z01404943TDYJCPX31X6L";
 
     public hostedZone: HostedZone;
     public certificate: Certificate;
@@ -14,18 +13,18 @@ export class DomainStack extends Construct{
         super(scope, id);
 
         // Hosted Zone for parent domain
-        const parentHostedZone = HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
-            zoneName: this.CRUX_DOMAIN,
-            hostedZoneId: this.HOSTED_ZONE_ID,
+        const parentHostedZone = HostedZone.fromLookup(this, 'ParentHostedZone', {
+            domainName: this.CRUX_DOMAIN,
         });
 
         this.hostedZone = new HostedZone(this, 'ChoirSeatingManagerHostedZone', {
             zoneName: this.HOST_DOMAIN,
         });
 
-        const delegationRecord = new ZoneDelegationRecord(this, 'DelegationRecord', {
+        new NsRecord(this, 'ChoirSeatingManagerNSRecord', {
             zone: parentHostedZone,
-            nameServers: this.hostedZone.hostedZoneNameServers!,
+            recordName: this.HOST_DOMAIN,
+            values: this.hostedZone.hostedZoneNameServers || [],
         });
 
         // ACM Certificate for the domain
