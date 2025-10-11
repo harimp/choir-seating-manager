@@ -8,7 +8,9 @@ export class DomainStack extends Stack{
 
     public hostedZone: HostedZone;
     public certificate: Certificate;
+    public apiCertificate: Certificate;
     public HOST_DOMAIN = `choir.${this.CRUX_DOMAIN}`;
+    public API_DOMAIN = `api.choir.${this.CRUX_DOMAIN}`;
 
     constructor(scope: Construct, id: string, props: StackProps) {
         super(scope, id, props);
@@ -28,9 +30,15 @@ export class DomainStack extends Stack{
             values: this.hostedZone.hostedZoneNameServers || [],
         });
 
-        // ACM Certificate for the domain
+        // ACM Certificate for the main domain
         this.certificate = new Certificate(this, 'ChoirSeatingManagerCertificate', {
             domainName: this.HOST_DOMAIN,
+            validation: CertificateValidation.fromDns(this.hostedZone),
+        });
+
+        // Separate ACM Certificate for the API subdomain
+        this.apiCertificate = new Certificate(this, 'APICertificate', {
+            domainName: this.API_DOMAIN,
             validation: CertificateValidation.fromDns(this.hostedZone),
         });
     }

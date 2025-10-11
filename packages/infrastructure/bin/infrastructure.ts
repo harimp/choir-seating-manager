@@ -12,14 +12,15 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
 };
 
-new DataPlaneStack(app, 'DataPlaneStack', {
-  env,
-  description: 'Choir Seating Manager - Data Plane (APIs, Databases, etc.)',
-});
-
 const domainStack = new DomainStack(app, 'DomainStack', {
   env,
   description: 'Choir Seating Manager - Domain and Certificate',
+});
+
+new DataPlaneStack(app, 'DataPlaneStack', {
+  env,
+  description: 'Choir Seating Manager - Data Plane (APIs, Databases, etc.)',
+  domainStack,
 });
 
 new WebsiteStack(app, 'ChoirSeatingManagerStack', {

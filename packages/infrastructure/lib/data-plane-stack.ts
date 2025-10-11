@@ -4,13 +4,21 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53targets from "aws-cdk-lib/aws-route53-targets";
 import * as path from "path";
+import { DomainStack } from "./domain-stack";
+
+export interface DataPlaneStackProps extends StackProps {
+    domainStack: DomainStack;
+}
 
 export class DataPlaneStack extends Stack {
     public readonly sessionTable: dynamodb.Table;
     public readonly api: apigateway.RestApi;
+    public readonly customDomain: apigateway.DomainName;
 
-    constructor(scope: Construct, id: string, props: StackProps) {
+    constructor(scope: Construct, id: string, props: DataPlaneStackProps) {
         super(scope, id, props);
 
         // Create DynamoDB table for session management
@@ -67,6 +75,32 @@ export class DataPlaneStack extends Stack {
                 allowMethods: apigateway.Cors.ALL_METHODS,
                 allowHeaders: ["Content-Type", "Authorization"],
             },
+            deployOptions: {
+                stageName: "prod",
+            },
+        });
+
+        // Create custom domain for API Gateway
+        this.customDomain = new apigateway.DomainName(this, "ApiCustomDomain", {
+            domainName: props.domainStack.API_DOMAIN,
+            certificate: props.domainStack.apiCertificate,
+            endpointType: apigateway.EndpointType.REGIONAL,
+        });
+
+        // Map custom domain to API Gateway
+        new apigateway.BasePathMapping(this, "ApiBasePathMapping", {
+            domainName: this.customDomain,
+            restApi: this.api,
+            stage: this.api.deploymentStage,
+        });
+
+        // Create Route53 A record for API subdomain
+        new route53.ARecord(this, "ApiAliasRecord", {
+            zone: props.domainStack.hostedZone,
+            recordName: props.domainStack.API_DOMAIN,
+            target: route53.RecordTarget.fromAlias(
+                new route53targets.ApiGatewayDomain(this.customDomain)
+            ),
         });
 
         // Create Lambda integration (shared for all routes)
@@ -88,11 +122,17 @@ export class DataPlaneStack extends Stack {
         // DELETE /sessions/{sessionName} - Delete session
         sessionByName.addMethod("DELETE", lambdaIntegration);
 
-        // Output API URL
+        // Output API URLs
         new CfnOutput(this, "ApiUrl", {
             value: this.api.url,
-            description: "URL of the Sessions API",
+            description: "Default URL of the Sessions API",
             exportName: "ChoirSessionsApiUrl",
+        });
+
+        new CfnOutput(this, "ApiCustomDomainUrl", {
+            value: `https://${props.domainStack.API_DOMAIN}`,
+            description: "Custom domain URL of the Sessions API",
+            exportName: "ChoirSessionsApiCustomUrl",
         });
 
         new CfnOutput(this, "SessionTableName", {
