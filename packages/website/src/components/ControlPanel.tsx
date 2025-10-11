@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChoirMember, VoiceSection, StageSettings } from '../types';
+import { ChoirMember, VoiceSection, StageSettings, AlignmentMode, PianoPosition } from '../types';
 import './ControlPanel.scss';
 
 interface ControlPanelProps {
@@ -114,7 +114,7 @@ export const ControlPanel = ({
                     name="alignment"
                     value="balanced"
                     checked={settings.alignmentMode === 'balanced'}
-                    onChange={(e) => onSettingsChange({ alignmentMode: e.target.value as any })}
+                    onChange={(e) => onSettingsChange({ alignmentMode: e.target.value as AlignmentMode })}
                   />
                   <span>Balanced Center</span>
                 </label>
@@ -124,7 +124,7 @@ export const ControlPanel = ({
                     name="alignment"
                     value="grid"
                     checked={settings.alignmentMode === 'grid'}
-                    onChange={(e) => onSettingsChange({ alignmentMode: e.target.value as any })}
+                    onChange={(e) => onSettingsChange({ alignmentMode: e.target.value as AlignmentMode })}
                   />
                   <span>Grid Pattern</span>
                 </label>
@@ -140,7 +140,7 @@ export const ControlPanel = ({
                     name="piano"
                     value="left"
                     checked={settings.pianoPosition === 'left'}
-                    onChange={(e) => onSettingsChange({ pianoPosition: e.target.value as any })}
+                    onChange={(e) => onSettingsChange({ pianoPosition: e.target.value as PianoPosition })}
                   />
                   <span>Left</span>
                 </label>
@@ -150,7 +150,7 @@ export const ControlPanel = ({
                     name="piano"
                     value="right"
                     checked={settings.pianoPosition === 'right'}
-                    onChange={(e) => onSettingsChange({ pianoPosition: e.target.value as any })}
+                    onChange={(e) => onSettingsChange({ pianoPosition: e.target.value as PianoPosition })}
                   />
                   <span>Right</span>
                 </label>

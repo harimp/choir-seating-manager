@@ -245,7 +245,7 @@ export const ChoirStageView = ({
     setDragState(newDragState);
   };
 
-  const handleDragEnd = (_member: ChoirMember) => {
+  const handleDragEnd = () => {
     // Use ref to get immediate value, not stale state
     const currentDragState = dragStateRef.current;
     

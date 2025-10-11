@@ -11,7 +11,8 @@
     "preview": "yarn workspace website preview",
     "cdk": "yarn workspace infrastructure cdk",
     "deploy": "yarn workspace website build && yarn workspace infrastructure cdk deploy",
-    "synth": "yarn workspace infrastructure cdk synth"
+    "synth": "yarn workspace infrastructure cdk synth",
+    "website:lint": "yarn workspace website lint"
   },
   "engines": {
     "node": ">=20.0.0"
