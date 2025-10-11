@@ -3,7 +3,7 @@
  */
 export function getRowFromY(
   yPosition: number,
-  stageHeight: number,
+  _stageHeight: number,
   numberOfRows: number,
   rowAreaTop: number,
   rowAreaHeight: number

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useParams } from 'react-router-dom';
 import { ControlPanel } from './components/ControlPanel';
 import { ChoirStageView } from './components/ChoirStageView';
 import { ChoirMember, VoiceSection, StageSettings } from './types';
@@ -15,7 +16,7 @@ import {
 } from './utils/alignmentCalculations';
 import './styles/App.scss';
 
-function App() {
+function ChoirManager() {
   const [members, setMembers] = useState<ChoirMember[]>([]);
   const [settings, setSettings] = useState<StageSettings>({
     numberOfRows: 3,
@@ -141,6 +142,23 @@ function App() {
         onMemberUpdate={handleMemberUpdate}
       />
     </div>
+  );
+}
+
+function SessionView() {
+  const { sessionHash: _sessionHash } = useParams<{ sessionHash: string }>();
+  
+  // For now, just show the choir manager with localStorage
+  // Later, this will load data from DynamoDB using the _sessionHash
+  return <ChoirManager />;
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<ChoirManager />} />
+      <Route path="/:sessionHash" element={<SessionView />} />
+    </Routes>
   );
 }
 
