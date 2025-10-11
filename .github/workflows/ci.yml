@@ -48,7 +48,7 @@ jobs:
       
       - name: Deploy infrastructure
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: yarn workspace infrastructure cdk deploy --require-approval never
+        run: yarn workspace infrastructure cdk deploy --require-approval never --all
         env:
           CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
           CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
