@@ -5,10 +5,14 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { DomainStack } from './domain-stack';
 
 export class WebsiteStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Domain stack
+    new DomainStack(this, 'DomainStack');
 
     // S3 bucket for hosting the static website
     const websiteBucket = new s3.Bucket(this, 'ChoirSeatingWebsiteBucket', {

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import { App } from 'aws-cdk-lib';
 import 'source-map-support/register';
-import * as cdk from 'aws-cdk-lib';
 import { WebsiteStack } from '../lib/website-stack';
 
-const app = new cdk.App();
+const app = new App();
 
 new WebsiteStack(app, 'ChoirSeatingManagerStack', {
   env: {
