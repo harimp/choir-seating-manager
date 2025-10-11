@@ -21,18 +21,6 @@ export class WebsiteStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    // CloudFront Origin Access Identity
-    const originAccessIdentity = new cloudfront.OriginAccessIdentity(
-      this,
-      'ChoirSeatingOAI',
-      {
-        comment: 'OAI for Choir Seating Manager',
-      }
-    );
-
-    // Grant CloudFront access to the S3 bucket
-    websiteBucket.grantRead(originAccessIdentity);
-
     // CloudFront distribution
     const distribution = new cloudfront.Distribution(
       this,
@@ -40,9 +28,7 @@ export class WebsiteStack extends cdk.Stack {
       {
         defaultRootObject: 'index.html',
         defaultBehavior: {
-          origin: new origins.S3Origin(websiteBucket, {
-            originAccessIdentity,
-          }),
+          origin: origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,

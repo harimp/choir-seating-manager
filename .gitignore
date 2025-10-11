@@ -24,8 +24,8 @@ yarn-error.log*
 .env*.local
 
 # CDK
-cdk.out/
-.cdk.staging/
+**/cdk.out/
+**/.cdk.staging/
 
 # IDE
 .vscode/
