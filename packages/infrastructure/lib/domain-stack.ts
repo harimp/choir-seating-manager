@@ -4,10 +4,10 @@ import { Construct } from "constructs";
 
 export class DomainStack extends Construct{
     private CRUX_DOMAIN = "harimp.com";
-    private HOST_DOMAIN = `choir.${this.CRUX_DOMAIN}`;
 
     public hostedZone: HostedZone;
     public certificate: Certificate;
+    public HOST_DOMAIN = `choir.${this.CRUX_DOMAIN}`;
 
     constructor(scope: Construct, id: string) {
         super(scope, id);

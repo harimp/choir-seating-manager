@@ -12,7 +12,7 @@ export class WebsiteStack extends cdk.Stack {
     super(scope, id, props);
 
     // Domain stack
-    new DomainStack(this, 'DomainStack');
+    const domainStack = new DomainStack(this, 'DomainStack');
 
     // S3 bucket for hosting the static website
     const websiteBucket = new s3.Bucket(this, 'ChoirSeatingWebsiteBucket', {
@@ -51,6 +51,8 @@ export class WebsiteStack extends cdk.Stack {
             ttl: cdk.Duration.minutes(5),
           },
         ],
+        domainNames: [domainStack.HOST_DOMAIN],
+        certificate: domainStack.certificate,
       }
     );
 
