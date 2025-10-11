@@ -2,6 +2,7 @@ import { Stack, StackProps, RemovalPolicy, CfnOutput, Duration } from "aws-cdk-l
 import { Construct } from "constructs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as path from "path";
 
@@ -35,22 +36,23 @@ export class DataPlaneStack extends Stack {
         });
 
         // Create single Lambda function for all operations
-        const sessionsLambda = new lambda.Function(this, "SessionsFunction", {
+        const sessionsLambda = new nodejs.NodejsFunction(this, "SessionsFunction", {
+            entry: path.join(__dirname, "../../api/src/index.ts"),
+            handler: "handler",
             runtime: lambda.Runtime.NODEJS_20_X,
-            handler: "index.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../../api"), {
-                bundling: {
-                    image: lambda.Runtime.NODEJS_20_X.bundlingImage,
-                    command: [
-                        "bash", "-c",
-                        "npm ci && npm run build && cp -r dist/* /asset-output/ && cp -r node_modules /asset-output/"
-                    ],
-                },
-            }),
             environment: {
                 TABLE_NAME: this.sessionTable.tableName,
             },
             timeout: Duration.seconds(30),
+            bundling: {
+                minify: true,
+                sourceMap: true,
+                target: "es2020",
+                externalModules: [
+                    "@aws-sdk/client-dynamodb",
+                    "@aws-sdk/lib-dynamodb",
+                ],
+            },
         });
 
         // Grant DynamoDB permissions to Lambda function
