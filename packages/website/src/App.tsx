@@ -146,8 +146,8 @@ function ChoirManager() {
 }
 
 function SessionView() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sessionHash } = useParams<{ sessionHash: string }>();
+  console.log(sessionHash)
   
   // For now, just show the choir manager with localStorage
   // Later, this will load data from DynamoDB using the sessionHash
