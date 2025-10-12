@@ -23,3 +23,18 @@ export interface ChoirData {
   settings: StageSettings;
   lastUpdated: string;
 }
+
+export interface SessionItem {
+  sessionId: string;
+  sessionCode: string;
+  sessionName: string;
+  choirData: ChoirData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSessionRequest {
+  sessionCode: string;
+  sessionName: string;
+  choirData: ChoirData;
+}
