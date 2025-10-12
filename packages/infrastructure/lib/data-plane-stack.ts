@@ -33,11 +33,11 @@ export class DataPlaneStack extends Stack {
             removalPolicy: RemovalPolicy.RETAIN,
         });
 
-        // Add GSI for querying by session name
+        // Add GSI for querying by session code
         this.sessionTable.addGlobalSecondaryIndex({
-            indexName: "SessionNameIndex",
+            indexName: "SessionCodeIndex",
             partitionKey: {
-                name: "sessionName",
+                name: "sessionCode",
                 type: dynamodb.AttributeType.STRING,
             },
             projectionType: dynamodb.ProjectionType.ALL,
@@ -112,15 +112,15 @@ export class DataPlaneStack extends Stack {
         // POST /sessions - Create session
         sessions.addMethod("POST", lambdaIntegration);
 
-        // GET /sessions/{sessionName} - Get session
-        const sessionByName = sessions.addResource("{sessionName}");
-        sessionByName.addMethod("GET", lambdaIntegration);
+        // GET /sessions/{sessionCode} - Get session
+        const sessionByCode = sessions.addResource("{sessionCode}");
+        sessionByCode.addMethod("GET", lambdaIntegration);
 
-        // PUT /sessions/{sessionName} - Update session
-        sessionByName.addMethod("PUT", lambdaIntegration);
+        // PUT /sessions/{sessionCode} - Update session
+        sessionByCode.addMethod("PUT", lambdaIntegration);
 
-        // DELETE /sessions/{sessionName} - Delete session
-        sessionByName.addMethod("DELETE", lambdaIntegration);
+        // DELETE /sessions/{sessionCode} - Delete session
+        sessionByCode.addMethod("DELETE", lambdaIntegration);
 
         // Output API URLs
         new CfnOutput(this, "ApiUrl", {

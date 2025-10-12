@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useParams } from 'react-router-dom';
+import { Home } from './components/Home';
 import { ControlPanel } from './components/ControlPanel';
 import { ChoirStageView } from './components/ChoirStageView';
 import { ChoirMember, VoiceSection, StageSettings } from './types';
@@ -16,7 +17,11 @@ import {
 } from './utils/alignmentCalculations';
 import './styles/App.scss';
 
-function ChoirManager() {
+interface ChoirManagerProps {
+  sessionCode?: string;
+}
+
+function ChoirManager({ sessionCode }: ChoirManagerProps) {
   const [members, setMembers] = useState<ChoirMember[]>([]);
   const [settings, setSettings] = useState<StageSettings>({
     numberOfRows: 3,
@@ -28,10 +33,12 @@ function ChoirManager() {
 
   // Load data on mount
   useEffect(() => {
+    // TODO: If sessionCode is provided, fetch from API
+    // For now, just use localStorage
     const data = loadChoirData();
     setMembers(data.members);
     setSettings(data.settings);
-  }, []);
+  }, [sessionCode]);
 
   // Save data when members or settings change
   useEffect(() => {
@@ -146,19 +153,18 @@ function ChoirManager() {
 }
 
 function SessionView() {
-  const { sessionHash } = useParams<{ sessionHash: string }>();
-  console.log(sessionHash)
+  const { sessionCode } = useParams<{ sessionCode: string }>();
   
   // For now, just show the choir manager with localStorage
-  // Later, this will load data from DynamoDB using the sessionHash
-  return <ChoirManager />;
+  // Later, this will load data from DynamoDB using the sessionCode
+  return <ChoirManager sessionCode={sessionCode} />;
 }
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<ChoirManager />} />
-      <Route path="/:sessionHash" element={<SessionView />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/:sessionCode" element={<SessionView />} />
     </Routes>
   );
 }

@@ -7,8 +7,16 @@ const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const TABLE_NAME = process.env.TABLE_NAME || 'choir-sessions';
 
-export async function createSession(sessionName: string, choirData: ChoirData): Promise<SessionItem> {
+export async function createSession(sessionCode: string, sessionName: string, choirData: ChoirData): Promise<SessionItem> {
   // Basic validation
+  if (!sessionCode || sessionCode.trim().length === 0) {
+    throw new Error('Session code is required');
+  }
+
+  if (sessionCode.length > 50) {
+    throw new Error('Session code must be 50 characters or less');
+  }
+
   if (!sessionName || sessionName.trim().length === 0) {
     throw new Error('Session name is required');
   }
@@ -21,20 +29,20 @@ export async function createSession(sessionName: string, choirData: ChoirData): 
     throw new Error('Invalid choir data: settings are required');
   }
 
-  // Check if session with this name already exists using GSI
+  // Check if session with this code already exists using GSI
   const existingResult = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      IndexName: 'SessionNameIndex',
-      KeyConditionExpression: 'sessionName = :sessionName',
+      IndexName: 'SessionCodeIndex',
+      KeyConditionExpression: 'sessionCode = :sessionCode',
       ExpressionAttributeValues: {
-        ':sessionName': sessionName,
+        ':sessionCode': sessionCode,
       },
     })
   );
 
   if (existingResult.Items && existingResult.Items.length > 0) {
-    throw new Error('Session with this name already exists');
+    throw new Error('Session with this code already exists');
   }
 
   // Create session item
@@ -43,6 +51,7 @@ export async function createSession(sessionName: string, choirData: ChoirData): 
 
   const sessionItem: SessionItem = {
     sessionId,
+    sessionCode,
     sessionName,
     choirData,
     createdAt: now,
@@ -60,15 +69,15 @@ export async function createSession(sessionName: string, choirData: ChoirData): 
   return sessionItem;
 }
 
-export async function getSession(sessionName: string): Promise<SessionItem | null> {
-  // Query by session name using GSI
+export async function getSession(sessionCode: string): Promise<SessionItem | null> {
+  // Query by session code using GSI
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      IndexName: 'SessionNameIndex',
-      KeyConditionExpression: 'sessionName = :sessionName',
+      IndexName: 'SessionCodeIndex',
+      KeyConditionExpression: 'sessionCode = :sessionCode',
       ExpressionAttributeValues: {
-        ':sessionName': sessionName,
+        ':sessionCode': sessionCode,
       },
     })
   );
@@ -80,7 +89,7 @@ export async function getSession(sessionName: string): Promise<SessionItem | nul
   return result.Items[0] as SessionItem;
 }
 
-export async function updateSession(sessionName: string, choirData: ChoirData): Promise<SessionItem> {
+export async function updateSession(sessionCode: string, choirData: ChoirData): Promise<SessionItem> {
   // Basic validation
   if (!choirData.members || !Array.isArray(choirData.members)) {
     throw new Error('Invalid choir data: members array is required');
@@ -90,17 +99,18 @@ export async function updateSession(sessionName: string, choirData: ChoirData): 
     throw new Error('Invalid choir data: settings are required');
   }
 
-  // Get existing session by name using GSI
-  const existingSession = await getSession(sessionName);
+  // Get existing session by code using GSI
+  const existingSession = await getSession(sessionCode);
 
   if (!existingSession) {
     throw new Error('Session not found');
   }
 
-  // Update session item
+  // Update session item (preserving sessionName and sessionCode)
   const sessionItem: SessionItem = {
     sessionId: existingSession.sessionId,
-    sessionName,
+    sessionCode: existingSession.sessionCode,
+    sessionName: existingSession.sessionName,
     choirData,
     createdAt: existingSession.createdAt,
     updatedAt: new Date().toISOString(),
@@ -117,9 +127,9 @@ export async function updateSession(sessionName: string, choirData: ChoirData): 
   return sessionItem;
 }
 
-export async function deleteSession(sessionName: string): Promise<{ message: string; sessionName: string; sessionId: string }> {
-  // Get existing session by name using GSI
-  const existingSession = await getSession(sessionName);
+export async function deleteSession(sessionCode: string): Promise<{ message: string; sessionCode: string; sessionId: string }> {
+  // Get existing session by code using GSI
+  const existingSession = await getSession(sessionCode);
 
   if (!existingSession) {
     throw new Error('Session not found');
@@ -135,7 +145,7 @@ export async function deleteSession(sessionName: string): Promise<{ message: str
 
   return { 
     message: 'Session deleted successfully', 
-    sessionName,
+    sessionCode,
     sessionId: existingSession.sessionId
   };
 }

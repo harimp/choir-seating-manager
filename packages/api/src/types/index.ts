@@ -26,6 +26,7 @@ export interface ChoirData {
 
 export interface SessionItem {
   sessionId: string;
+  sessionCode: string;
   sessionName: string;
   choirData: ChoirData;
   createdAt: string;
@@ -33,6 +34,7 @@ export interface SessionItem {
 }
 
 export interface CreateSessionRequest {
+  sessionCode: string;
   sessionName: string;
   choirData: ChoirData;
 }
