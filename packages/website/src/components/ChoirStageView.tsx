@@ -109,7 +109,7 @@ export const ChoirStageView = ({
     const iconHeight = iconWidth * (4 / 3);
 
     // Calculate text size: scales with icon but constrained for readability
-    const textSize = Math.max(11, Math.min(iconWidth * 0.14, 16));
+    const textSize = Math.max(16, Math.min(iconWidth * 0.14, 16));
 
     return { 
       width: Math.round(iconWidth), 
@@ -305,6 +305,15 @@ export const ChoirStageView = ({
     setSelectedMember(member.id === selectedMember ? null : member.id);
   };
 
+  const handleMemberRemove = (member: ChoirMember) => {
+    const updatedMembers = members.filter(m => m.id !== member.id);
+    onMemberUpdate(updatedMembers);
+    // Clear selection if the removed member was selected
+    if (selectedMember === member.id) {
+      setSelectedMember(null);
+    }
+  };
+
   // Calculate row positions
   const getRowY = (rowNumber: number): number => {
     const rowAreaTop = 20; // Start at 20% from top (closer to conductor)
@@ -388,6 +397,7 @@ export const ChoirStageView = ({
             onDrag={handleDrag}
             onDragEnd={handleDragEnd}
             onClick={handleMemberClick}
+            onRemove={handleMemberRemove}
             isSelected={selectedMember === member.id}
             style={getMemberStyle(member)}
             iconWidth={iconSize.width}
@@ -405,6 +415,7 @@ export const ChoirStageView = ({
             onDrag={() => {}}
             onDragEnd={() => {}}
             onClick={() => {}}
+            onRemove={() => {}}
             isSelected={false}
             style={getShadowStyle()}
             iconWidth={iconSize.width}

@@ -7,6 +7,7 @@ interface MemberIconProps {
   onDrag: (member: ChoirMember, x: number, y: number) => void;
   onDragEnd: (member: ChoirMember) => void;
   onClick: (member: ChoirMember) => void;
+  onRemove: (member: ChoirMember) => void;
   isSelected?: boolean;
   style?: React.CSSProperties;
   iconWidth: number;
@@ -15,10 +16,10 @@ interface MemberIconProps {
 }
 
 const VOICE_COLORS: Record<VoiceSection, string> = {
-  Soprano: '#FFD700', // Gold
-  Alto: '#FF69B4',    // Hot Pink
-  Tenor: '#90EE90',   // Light Green
-  Bass: '#4169E1',    // Royal Blue
+  Soprano: '#FF69B4', // Hot Pink
+  Alto: '#FFD700',    // Gold
+  Tenor: '#4169E1',   // Royal Blue
+  Bass: '#90EE90',    // Light Green
 };
 
 // Function to lighten a hex color
@@ -37,6 +38,7 @@ export const MemberIcon = ({
   onDrag,
   onDragEnd,
   onClick,
+  onRemove,
   isSelected = false,
   style,
   iconWidth,
@@ -69,6 +71,12 @@ export const MemberIcon = ({
       // Single click - select
       onClick(member);
     }
+  };
+
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onRemove(member);
   };
 
   return (
@@ -105,6 +113,16 @@ export const MemberIcon = ({
       </svg>
       
       <div className="member-name" style={{ fontSize: `${textSize}px`, fontWeight: 'bold' }}>{member.name}</div>
+      
+      <button
+        className="remove-button"
+        onClick={handleRemoveClick}
+        onMouseDown={(e) => e.stopPropagation()}
+        aria-label={`Remove ${member.name}`}
+        title={`Remove ${member.name}`}
+      >
+        ×
+      </button>
     </div>
   );
 };
