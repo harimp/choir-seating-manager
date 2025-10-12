@@ -62,6 +62,12 @@ export const ChoirStageView = ({
   
   const [stageWidth, setStageWidth] = useState(0);
   const [stageHeight, setStageHeight] = useState(0);
+  
+  // Zoom and pan state
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   // Update stage dimensions on mount and resize
   useEffect(() => {
@@ -76,6 +82,86 @@ export const ChoirStageView = ({
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // Handle zoom with mouse wheel
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        
+        const zoomSpeed = 0.001;
+        const delta = -e.deltaY * zoomSpeed;
+        const newZoom = Math.min(Math.max(0.5, zoom + delta), 3);
+        
+        // Zoom towards mouse cursor position
+        if (stageRef.current) {
+          const rect = stageRef.current.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+          
+          // Calculate the point in stage coordinates before zoom
+          const stageX = (mouseX - panOffset.x) / zoom;
+          const stageY = (mouseY - panOffset.y) / zoom;
+          
+          // Calculate new pan offset to keep the same point under cursor
+          const newPanX = mouseX - stageX * newZoom;
+          const newPanY = mouseY - stageY * newZoom;
+          
+          setPanOffset({ x: newPanX, y: newPanY });
+        }
+        
+        setZoom(newZoom);
+      }
+    };
+
+    const stage = stageRef.current;
+    if (stage) {
+      stage.addEventListener('wheel', handleWheel, { passive: false });
+      return () => stage.removeEventListener('wheel', handleWheel);
+    }
+  }, [zoom, panOffset]);
+
+  // Handle pan with mouse drag
+  const handleStageMouseDown = (e: React.MouseEvent) => {
+    // Only pan if NOT clicking on a member icon
+    const target = e.target as HTMLElement;
+    const isMemberClick = target.closest('.member-icon');
+    
+    if (!isMemberClick) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isPanning) {
+        setPanOffset({
+          x: e.clientX - panStart.x,
+          y: e.clientY - panStart.y,
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsPanning(false);
+    };
+
+    if (isPanning) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isPanning, panStart]);
+
+  // Reset zoom and pan
+  const handleResetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
 
   // Calculate dynamic icon size based on member count and available space
   const calculateIconSize = (): { width: number; height: number; textSize: number } => {
@@ -159,8 +245,9 @@ export const ChoirStageView = ({
     if (!stageRef.current) return;
 
     const rect = stageRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    // Convert screen coordinates to stage coordinates accounting for zoom and pan
+    const x = (clientX - rect.left - panOffset.x) / zoom;
+    const y = (clientY - rect.top - panOffset.y) / zoom;
 
     // Calculate which row the cursor is currently hovering over
     const rowAreaTop = rect.height * 0.20;  // Match getRowY: 20% from top
@@ -374,21 +461,39 @@ export const ChoirStageView = ({
 
   return (
     <div className="choir-stage-view" ref={stageRef}>
-      {/* Center line */}
-      <div className="center-line" />
-
-      {/* Conductor */}
-      <div className="conductor-position">
-        <ConductorIcon />
+      {/* Zoom controls */}
+      <div className="zoom-controls">
+        <button onClick={() => setZoom(Math.min(3, zoom * 1.2))} title="Zoom In">+</button>
+        <span className="zoom-level">{Math.round(zoom * 100)}%</span>
+        <button onClick={() => setZoom(Math.max(0.5, zoom / 1.2))} title="Zoom Out">−</button>
+        <button onClick={handleResetView} title="Reset View">Reset</button>
       </div>
 
-      {/* Piano */}
-      <div className={`piano-position piano-${settings.pianoPosition}`}>
-        <PianoIcon />
-      </div>
+      {/* Stage content with transform */}
+      <div 
+        className="stage-content"
+        style={{
+          transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
+          transformOrigin: '0 0',
+          cursor: isPanning ? 'grabbing' : 'grab',
+        }}
+        onMouseDown={handleStageMouseDown}
+      >
+        {/* Center line */}
+        <div className="center-line" />
 
-      {/* Members */}
-      <div className="members-layer">
+        {/* Conductor */}
+        <div className="conductor-position">
+          <ConductorIcon />
+        </div>
+
+        {/* Piano */}
+        <div className={`piano-position piano-${settings.pianoPosition}`}>
+          <PianoIcon />
+        </div>
+
+        {/* Members */}
+        <div className="members-layer">
         {members.map(member => (
           <MemberIcon
             key={member.id}
@@ -425,8 +530,9 @@ export const ChoirStageView = ({
         )}
       </div>
 
-      {/* Centre label */}
-      <div className="centre-label">CENTRE</div>
+        {/* Centre label */}
+        <div className="centre-label">CENTRE</div>
+      </div>
     </div>
   );
 };
