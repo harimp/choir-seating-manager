@@ -69,6 +69,17 @@ export const ChoirStageView = ({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  
+  // Touch state for pinch-to-zoom
+  const [touchState, setTouchState] = useState<{
+    initialDistance: number | null;
+    initialZoom: number;
+    initialCenter: { x: number; y: number } | null;
+  }>({
+    initialDistance: null,
+    initialZoom: 1,
+    initialCenter: null,
+  });
 
   // Update viewport dimensions and calculate initial zoom on mount and resize
   useEffect(() => {
@@ -143,6 +154,106 @@ export const ChoirStageView = ({
     if (!isMemberClick) {
       setIsPanning(true);
       setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    }
+  };
+
+  // Touch event handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    const isMemberTouch = target.closest('.member-icon');
+    
+    if (isMemberTouch) return;
+    
+    if (e.touches.length === 1) {
+      // Single finger - pan
+      const touch = e.touches[0];
+      setIsPanning(true);
+      setPanStart({ x: touch.clientX - panOffset.x, y: touch.clientY - panOffset.y });
+    } else if (e.touches.length === 2) {
+      // Two fingers - prepare for pinch zoom
+      e.preventDefault();
+      setIsPanning(false);
+      
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const centerX = (touch1.clientX + touch2.clientX) / 2;
+      const centerY = (touch1.clientY + touch2.clientY) / 2;
+      
+      setTouchState({
+        initialDistance: distance,
+        initialZoom: zoom,
+        initialCenter: { x: centerX, y: centerY },
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isPanning) {
+      // Single finger panning
+      const touch = e.touches[0];
+      setPanOffset({
+        x: touch.clientX - panStart.x,
+        y: touch.clientY - panStart.y,
+      });
+    } else if (e.touches.length === 2 && touchState.initialDistance) {
+      // Two finger pinch zoom
+      e.preventDefault();
+      
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scale = currentDistance / touchState.initialDistance;
+      const newZoom = Math.min(Math.max(0.5, touchState.initialZoom * scale), 3);
+      
+      if (stageRef.current && touchState.initialCenter) {
+        const rect = stageRef.current.getBoundingClientRect();
+        const centerX = touchState.initialCenter.x - rect.left;
+        const centerY = touchState.initialCenter.y - rect.top;
+        
+        // Calculate the point in stage coordinates before zoom
+        const stageX = (centerX - panOffset.x) / zoom;
+        const stageY = (centerY - panOffset.y) / zoom;
+        
+        // Calculate new pan offset to keep the same point under touch center
+        const newPanX = centerX - stageX * newZoom;
+        const newPanY = centerY - stageY * newZoom;
+        
+        setPanOffset({ x: newPanX, y: newPanY });
+      }
+      
+      setZoom(newZoom);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setIsPanning(false);
+      setTouchState({
+        initialDistance: null,
+        initialZoom: zoom,
+        initialCenter: null,
+      });
+    } else if (e.touches.length === 1) {
+      // Switched from 2 fingers to 1 - restart pan
+      setTouchState({
+        initialDistance: null,
+        initialZoom: zoom,
+        initialCenter: null,
+      });
+      const touch = e.touches[0];
+      setIsPanning(true);
+      setPanStart({ x: touch.clientX - panOffset.x, y: touch.clientY - panOffset.y });
     }
   };
 
@@ -496,6 +607,9 @@ export const ChoirStageView = ({
           cursor: isPanning ? 'grabbing' : 'grab',
         }}
         onMouseDown={handleStageMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Center line */}
         <div className="center-line" />

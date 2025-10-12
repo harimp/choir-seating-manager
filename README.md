@@ -189,6 +189,25 @@ Edit `packages/infrastructure/lib/website-stack.ts` to:
 - Configure CloudFront cache policies
 - Add SSL certificates
 
+## 🧪 Testing
+
+### Test Session
+
+For testing purposes, use the session code: **`demo-choir-2024`**
+
+This test session contains sample choir data with 60 members and can be accessed at:
+```
+http://localhost:5174/demo-choir-2024
+```
+
+### Mobile Testing
+
+The application now supports mobile touch interactions:
+- **Single-finger pan**: Drag with one finger to pan around the stage
+- **Pinch-to-zoom**: Use two fingers to zoom in/out
+- **Member dragging**: Touch and drag choir members to reposition them
+- **Zoom controls**: Use the on-screen buttons for precise zoom control
+
 ## 🧪 Future Enhancements
 
 Potential features for future development:

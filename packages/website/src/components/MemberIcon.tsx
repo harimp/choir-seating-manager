@@ -66,6 +66,32 @@ export const MemberIcon = ({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.touches.length !== 1) return;
+    
+    onDragStart(member);
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (moveEvent.touches.length !== 1) return;
+      const touch = moveEvent.touches[0];
+      onDrag(member, touch.clientX, touch.clientY);
+    };
+
+    const handleTouchEnd = () => {
+      onDragEnd(member);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchEnd);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchcancel', handleTouchEnd);
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     if (e.detail === 1) {
       // Single click - select
@@ -84,6 +110,7 @@ export const MemberIcon = ({
       className={`member-icon ${isSelected ? 'selected' : ''}`}
       style={style}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       onClick={handleClick}
       title={member.name}
     >
