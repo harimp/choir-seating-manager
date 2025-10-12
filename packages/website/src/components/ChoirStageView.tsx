@@ -60,8 +60,9 @@ export const ChoirStageView = ({
     shadowYPercent: 0,
   });
   
-  const [stageWidth, setStageWidth] = useState(0);
-  const [stageHeight, setStageHeight] = useState(0);
+  // Fixed 16:9 canvas dimensions
+  const CANVAS_WIDTH = 1600;
+  const CANVAS_HEIGHT = 900;
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -69,12 +70,24 @@ export const ChoirStageView = ({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  // Update stage dimensions on mount and resize
+  // Update viewport dimensions and calculate initial zoom on mount and resize
   useEffect(() => {
     const updateDimensions = () => {
       if (stageRef.current) {
-        setStageWidth(stageRef.current.offsetWidth);
-        setStageHeight(stageRef.current.offsetHeight);
+        const vw = stageRef.current.offsetWidth;
+        const vh = stageRef.current.offsetHeight;
+        
+        // Calculate initial zoom to fit canvas in viewport with some padding
+        const scaleX = (vw * 0.95) / CANVAS_WIDTH;
+        const scaleY = (vh * 0.95) / CANVAS_HEIGHT;
+        const initialZoom = Math.min(scaleX, scaleY);
+        
+        setZoom(initialZoom);
+        
+        // Center the canvas in the viewport
+        const offsetX = (vw - CANVAS_WIDTH * initialZoom) / 2;
+        const offsetY = (vh - CANVAS_HEIGHT * initialZoom) / 2;
+        setPanOffset({ x: offsetX, y: offsetY });
       }
     };
 
@@ -157,18 +170,23 @@ export const ChoirStageView = ({
     }
   }, [isPanning, panStart]);
 
-  // Reset zoom and pan
+  // Reset zoom to 100% and center the canvas
   const handleResetView = () => {
-    setZoom(1);
-    setPanOffset({ x: 0, y: 0 });
+    if (stageRef.current) {
+      const vw = stageRef.current.offsetWidth;
+      const vh = stageRef.current.offsetHeight;
+      
+      setZoom(1.0); // Always reset to 100%
+      
+      // Center the canvas at 100% zoom
+      const offsetX = (vw - CANVAS_WIDTH) / 2;
+      const offsetY = (vh - CANVAS_HEIGHT) / 2;
+      setPanOffset({ x: offsetX, y: offsetY });
+    }
   };
 
-  // Calculate dynamic icon size based on member count and available space
+  // Calculate icon size based on fixed canvas and member count
   const calculateIconSize = (): { width: number; height: number; textSize: number } => {
-    if (stageWidth === 0 || stageHeight === 0) {
-      return { width: 120, height: 160, textSize: 11 };
-    }
-
     // Find maximum members in any single row
     const membersByRow = members.reduce((acc, member) => {
       acc[member.rowNumber] = (acc[member.rowNumber] || 0) + 1;
@@ -177,25 +195,25 @@ export const ChoirStageView = ({
     
     const maxMembersInRow = Math.max(...Object.values(membersByRow), 1);
 
-    // Calculate available space - maximize viewport usage
-    const usableWidth = stageWidth * 0.95; // Use 95% width (2.5% margins)
+    // Calculate available space on fixed 16:9 canvas
+    const usableWidth = CANVAS_WIDTH * 0.90; // Use 90% width
     const availableWidthPerMember = usableWidth / maxMembersInRow;
-    const rowAreaHeight = stageHeight * 0.70; // Rows occupy 70% of height (up from 55%)
+    const rowAreaHeight = CANVAS_HEIGHT * 0.65; // Rows occupy 65% of height
     const availableHeightPerRow = rowAreaHeight / settings.numberOfRows;
 
-    // Calculate icon width - pack more efficiently
+    // Calculate icon width based on fixed canvas
     let iconWidth = Math.min(
-      availableWidthPerMember * 0.95,  // 95% to make icons larger (no spacing needed)
-      availableHeightPerRow * 0.80,    // 80% of row height for better vertical usage
-      150                               // maximum cap
+      availableWidthPerMember * 0.85,  // 85% spacing between members
+      availableHeightPerRow * 0.75,    // 75% of row height
+      120                               // maximum cap for good visibility
     );
-    iconWidth = Math.max(iconWidth, 35); // minimum 35px
+    iconWidth = Math.max(iconWidth, 60); // minimum 60px for readability
 
     // Maintain 3:4 aspect ratio (width:height)
     const iconHeight = iconWidth * (4 / 3);
 
-    // Calculate text size: scales with icon but constrained for readability
-    const textSize = Math.max(16, Math.min(iconWidth * 0.14, 16));
+    // Calculate text size: scales with icon (larger for display viewing)
+    const textSize = Math.max(15, Math.min(iconWidth * 0.18, 20));
 
     return { 
       width: Math.round(iconWidth), 
@@ -210,19 +228,17 @@ export const ChoirStageView = ({
   const handleDragStart = (member: ChoirMember) => {
     if (!stageRef.current) return;
     
-    const rect = stageRef.current.getBoundingClientRect();
-    
-    // Calculate member's current position in pixels
+    // Calculate member's current position in pixels on fixed canvas
     const memberXPercent = calculateMemberDisplayPosition(
       member,
       members,
       settings.alignmentMode,
-      stageWidth,
+      CANVAS_WIDTH,
       iconSize.width
     );
     const memberYPercent = getRowY(member.rowNumber);
-    const memberXPixels = (memberXPercent / 100) * rect.width;
-    const memberYPixels = (memberYPercent / 100) * rect.height;
+    const memberXPixels = (memberXPercent / 100) * CANVAS_WIDTH;
+    const memberYPixels = (memberYPercent / 100) * CANVAS_HEIGHT;
     
     const newDragState = {
       member,
@@ -249,12 +265,12 @@ export const ChoirStageView = ({
     const x = (clientX - rect.left - panOffset.x) / zoom;
     const y = (clientY - rect.top - panOffset.y) / zoom;
 
-    // Calculate which row the cursor is currently hovering over
-    const rowAreaTop = rect.height * 0.20;  // Match getRowY: 20% from top
-    const rowAreaHeight = rect.height * 0.70;  // Match getRowY: 70% height
+    // Calculate which row the cursor is currently hovering over (on fixed canvas)
+    const rowAreaTop = CANVAS_HEIGHT * 0.25;  // Match getRowY: 25% from top
+    const rowAreaHeight = CANVAS_HEIGHT * 0.65;  // Match getRowY: 65% height
     const shadowRow = getRowFromY(
       y,
-      rect.height,
+      CANVAS_HEIGHT,
       settings.numberOfRows,
       rowAreaTop,
       rowAreaHeight
@@ -265,9 +281,9 @@ export const ChoirStageView = ({
       .filter(m => m.rowNumber === shadowRow && m.id !== member.id)
       .sort((a, b) => a.position - b.position);
 
-    // Calculate insertion index based on x position
+    // Calculate insertion index based on x position (on fixed canvas)
     let insertionIndex = shadowRowMembers.length;
-    const dropXPercent = (x / rect.width) * 100;
+    const dropXPercent = (x / CANVAS_WIDTH) * 100;
     
     if (shadowRowMembers.length > 0) {
       for (let i = 0; i < shadowRowMembers.length; i++) {
@@ -275,7 +291,7 @@ export const ChoirStageView = ({
           shadowRowMembers[i],
           members,
           settings.alignmentMode,
-          stageWidth,
+          CANVAS_WIDTH,
           iconSize.width
         );
         
@@ -311,7 +327,7 @@ export const ChoirStageView = ({
       shadowMember,
       members.filter(m => m.id !== member.id).concat(shadowMember),
       settings.alignmentMode,
-      stageWidth,
+      CANVAS_WIDTH,
       iconSize.width
     );
     const shadowYPercent = getRowY(shadowRow);
@@ -401,10 +417,10 @@ export const ChoirStageView = ({
     }
   };
 
-  // Calculate row positions
+  // Calculate row positions (percentages on fixed canvas)
   const getRowY = (rowNumber: number): number => {
-    const rowAreaTop = 20; // Start at 20% from top (closer to conductor)
-    const rowAreaHeight = 70; // Occupy 70% of height (maximize viewport)
+    const rowAreaTop = 25; // Start at 25% from top
+    const rowAreaHeight = 65; // Occupy 65% of height
     const rowHeight = rowAreaHeight / settings.numberOfRows;
     return rowAreaTop + rowNumber * rowHeight + rowHeight / 2;
   };
@@ -434,12 +450,12 @@ export const ChoirStageView = ({
         .concat(shadowMember);
     }
 
-    // Calculate position dynamically based on row and alignment mode
+    // Calculate position dynamically based on row and alignment mode (on fixed canvas)
     const xPercent = calculateMemberDisplayPosition(
       member,
       membersForCalculation,
       settings.alignmentMode,
-      stageWidth,
+      CANVAS_WIDTH,
       iconSize.width
     );
 
@@ -469,10 +485,12 @@ export const ChoirStageView = ({
         <button onClick={handleResetView} title="Reset View">Reset</button>
       </div>
 
-      {/* Stage content with transform */}
+      {/* Stage content with transform - Fixed 16:9 canvas */}
       <div 
         className="stage-content"
         style={{
+          width: `${CANVAS_WIDTH}px`,
+          height: `${CANVAS_HEIGHT}px`,
           transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
           transformOrigin: '0 0',
           cursor: isPanning ? 'grabbing' : 'grab',

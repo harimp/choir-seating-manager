@@ -34,12 +34,12 @@ body {
 .app-title {
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 70px; // Space for menu button
+  right: 280px; // Space for zoom controls
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: $spacing-md;
+  padding: $spacing-md $spacing-sm;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
   backdrop-filter: blur(8px);
   z-index: 10;
@@ -48,11 +48,33 @@ body {
 
   h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     color: $text-dark;
     letter-spacing: -0.5px;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    left: 60px;
+    right: 160px;
+    
+    h1 {
+      font-size: 16px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    left: 55px;
+    right: 140px;
+    
+    h1 {
+      font-size: 14px;
+    }
   }
 }
 
