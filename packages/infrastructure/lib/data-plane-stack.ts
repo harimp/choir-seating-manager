@@ -151,6 +151,25 @@ export class DataPlaneStack extends Stack {
         // DELETE /sessions/{sessionCode} - Delete session
         sessionByCode.addMethod("DELETE", lambdaIntegration);
 
+        // Snapshot routes
+        const snapshots = sessionByCode.addResource("snapshots");
+
+        // POST /sessions/{sessionCode}/snapshots - Create snapshot
+        snapshots.addMethod("POST", lambdaIntegration);
+
+        // GET /sessions/{sessionCode}/snapshots - List snapshots
+        snapshots.addMethod("GET", lambdaIntegration);
+
+        // GET /sessions/{sessionCode}/snapshots/{snapshotId} - Get snapshot
+        const snapshotById = snapshots.addResource("{snapshotId}");
+        snapshotById.addMethod("GET", lambdaIntegration);
+
+        // PATCH /sessions/{sessionCode}/snapshots/{snapshotId} - Update snapshot name
+        snapshotById.addMethod("PATCH", lambdaIntegration);
+
+        // DELETE /sessions/{sessionCode}/snapshots/{snapshotId} - Delete snapshot
+        snapshotById.addMethod("DELETE", lambdaIntegration);
+
         // Output API URLs
         new CfnOutput(this, "ApiUrl", {
             value: this.api.url,
