@@ -1,21 +1,21 @@
 @use '../styles/variables.scss' as *;
 
-.control-panel-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
-  animation: fadeIn 0.3s ease;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
   to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }
@@ -45,10 +45,6 @@
     transform: scale(1.05);
   }
 
-  &.open {
-    left: 370px;
-  }
-
   span {
     display: block;
     width: 25px;
@@ -57,42 +53,40 @@
     border-radius: 2px;
     transition: all 0.3s ease;
   }
-
-  &.open span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
-  }
-
-  &.open span:nth-child(2) {
-    opacity: 0;
-  }
-
-  &.open span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -7px);
-  }
 }
 
-.control-panel {
+.control-panel-modal-overlay {
   position: fixed;
   top: 0;
-  left: -350px;
-  width: 350px;
+  left: 0;
+  width: 100vw;
   height: 100vh;
-  background-color: white;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-  transition: left 0.3s ease;
-  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+  padding: 20px;
+}
 
-  &.open {
-    left: 0;
-  }
+.control-panel-modal {
+  position: relative;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
 
   .control-panel-content {
-    padding: 20px;
+    padding: 32px;
 
     h2 {
       margin: 0 0 24px 0;
-      font-size: 24px;
+      font-size: 28px;
       color: #333;
       border-bottom: 2px solid #eee;
       padding-bottom: 12px;
@@ -100,7 +94,7 @@
 
     h3 {
       margin: 0 0 16px 0;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
       color: #555;
     }
@@ -113,6 +107,48 @@
   }
 }
 
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.left-column,
+.right-column {
+  min-width: 0; // Prevents grid blowout
+}
+
+.control-panel-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+
+  &:hover {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+}
+
 .panel-section {
   margin-bottom: 32px;
   padding-bottom: 24px;
@@ -121,6 +157,28 @@
   &:last-child {
     border-bottom: none;
   }
+}
+
+.full-width-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #ddd;
+}
+
+.settings-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.settings-left,
+.settings-right {
+  min-width: 0;
 }
 
 .setting-group {
@@ -309,31 +367,21 @@
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1001;
+  z-index: 1002;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: fadeIn 0.2s ease;
+  padding: 20px;
 }
 
 .modal-content {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   max-width: 600px;
-  width: 90%;
+  width: 100%;
   max-height: 80vh;
   overflow: hidden;
   animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }

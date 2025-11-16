@@ -16,7 +16,6 @@ import {
 } from './types';
 import {
   loadChoirData,
-  exportChoirData,
   importChoirData,
   MigrationResult,
 } from './utils/storage';
@@ -362,14 +361,6 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     setSeating(updatedSeating);
   };
 
-  const handleExport = () => {
-    exportChoirData({
-      seating,
-      settings,
-      lastUpdated: new Date().toISOString(),
-    });
-  };
-
   const handleImport = async (file: File) => {
     try {
       const { data, migration, hasOrphanedMembers } = await importChoirData(file);
@@ -615,8 +606,6 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
         onSeatingChange={handleSeatingChange}
         displayMembers={displayMembers}
         onRemoveMemberFromSeating={handleRemoveFromSeating}
-        onExport={handleExport}
-        onImport={handleImport}
         sessionCode={sessionCode}
         onRestoreSnapshot={handleRestoreSnapshot}
       />
