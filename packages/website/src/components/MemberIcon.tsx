@@ -1,26 +1,21 @@
-import { ChoirMember, VoiceSection } from '../types';
+import { DisplayMember, VoicePartsConfiguration } from '../types';
+import { getVoicePartColor } from '../utils/voiceParts';
 import './MemberIcon.scss';
 
 interface MemberIconProps {
-  member: ChoirMember;
-  onDragStart: (member: ChoirMember) => void;
-  onDrag: (member: ChoirMember, x: number, y: number) => void;
-  onDragEnd: (member: ChoirMember) => void;
-  onClick: (member: ChoirMember) => void;
-  onRemove: (member: ChoirMember) => void;
+  member: DisplayMember;
+  voicePartsConfig: VoicePartsConfiguration;
+  onDragStart: (member: DisplayMember) => void;
+  onDrag: (member: DisplayMember, x: number, y: number) => void;
+  onDragEnd: (member: DisplayMember) => void;
+  onClick: (member: DisplayMember) => void;
+  onRemove: (member: DisplayMember) => void;
   isSelected?: boolean;
   style?: React.CSSProperties;
   iconWidth: number;
   iconHeight: number;
   textSize: number;
 }
-
-const VOICE_COLORS: Record<VoiceSection, string> = {
-  Soprano: '#FF69B4', // Hot Pink
-  Alto: '#FFD700',    // Gold
-  Tenor: '#4169E1',   // Royal Blue
-  Bass: '#90EE90',    // Light Green
-};
 
 // Function to lighten a hex color
 const lightenColor = (hex: string, percent: number): string => {
@@ -34,6 +29,7 @@ const lightenColor = (hex: string, percent: number): string => {
 
 export const MemberIcon = ({
   member,
+  voicePartsConfig,
   onDragStart,
   onDrag,
   onDragEnd,
@@ -45,7 +41,8 @@ export const MemberIcon = ({
   iconHeight,
   textSize,
 }: MemberIconProps) => {
-  const borderColor = VOICE_COLORS[member.voiceSection];
+  // Get color from voice parts configuration with fallback
+  const borderColor = getVoicePartColor(member.voicePartId, voicePartsConfig);
   const fillColor = lightenColor(borderColor, 50); // Lighter fill
 
   const handleMouseDown = (e: React.MouseEvent) => {

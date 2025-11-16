@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { flushSync } from 'react-dom';
-import { ChoirMember, StageSettings } from '../types';
+import { DisplayMember, StageSettings, VoicePartsConfiguration } from '../types';
 import { MemberIcon } from './MemberIcon';
 import { ConductorIcon } from './ConductorIcon';
 import { PianoIcon } from './PianoIcon';
@@ -9,13 +9,15 @@ import { calculateMemberDisplayPosition } from '../utils/alignmentCalculations';
 import './ChoirStageView.scss';
 
 interface ChoirStageViewProps {
-  members: ChoirMember[];
+  members: DisplayMember[];
+  voicePartsConfig: VoicePartsConfiguration;
   settings: StageSettings;
-  onMemberUpdate: (members: ChoirMember[]) => void;
+  onSeatingUpdate: (members: DisplayMember[]) => void;
+  onMemberRemove: (rosterId: string) => void;
 }
 
 interface DragState {
-  member: ChoirMember | null;
+  member: DisplayMember | null;
   startX: number;
   startY: number;
   currentX: number;
@@ -28,8 +30,10 @@ interface DragState {
 
 export const ChoirStageView = ({
   members,
+  voicePartsConfig,
   settings,
-  onMemberUpdate,
+  onSeatingUpdate,
+  onMemberRemove,
 }: ChoirStageViewProps) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
@@ -336,7 +340,7 @@ export const ChoirStageView = ({
   const iconSize = calculateIconSize();
 
 
-  const handleDragStart = (member: ChoirMember) => {
+  const handleDragStart = (member: DisplayMember) => {
     if (!stageRef.current) return;
     
     // Calculate member's current position in pixels on fixed canvas
@@ -368,7 +372,7 @@ export const ChoirStageView = ({
     setDragState(newDragState);
   };
 
-  const handleDrag = (member: ChoirMember, clientX: number, clientY: number) => {
+  const handleDrag = (member: DisplayMember, clientX: number, clientY: number) => {
     if (!stageRef.current) return;
 
     const rect = stageRef.current.getBoundingClientRect();
@@ -428,7 +432,7 @@ export const ChoirStageView = ({
     }
 
     // Calculate shadow display position
-    const shadowMember: ChoirMember = {
+    const shadowMember: DisplayMember = {
       ...member,
       rowNumber: shadowRow,
       position: shadowPos,
@@ -481,7 +485,7 @@ export const ChoirStageView = ({
     }
 
     // Create the shadow member (dragged member with updated position)
-    const shadowMember: ChoirMember = {
+    const shadowMember: DisplayMember = {
       ...currentDragState.member,
       rowNumber: currentDragState.shadowRowNumber,
       position: currentDragState.shadowPosition,
@@ -511,17 +515,17 @@ export const ChoirStageView = ({
       setDragState(emptyState);
     });
 
-    // Update members with the array that matches the drag preview
-    onMemberUpdate(updatedMembers);
+    // Update seating with the array that matches the drag preview
+    onSeatingUpdate(updatedMembers);
   };
 
-  const handleMemberClick = (member: ChoirMember) => {
+  const handleMemberClick = (member: DisplayMember) => {
     setSelectedMember(member.id === selectedMember ? null : member.id);
   };
 
-  const handleMemberRemove = (member: ChoirMember) => {
-    const updatedMembers = members.filter(m => m.id !== member.id);
-    onMemberUpdate(updatedMembers);
+  const handleMemberRemoveFromSeating = (member: DisplayMember) => {
+    // Remove from seating only (not from roster)
+    onMemberRemove(member.id);
     // Clear selection if the removed member was selected
     if (selectedMember === member.id) {
       setSelectedMember(null);
@@ -536,7 +540,7 @@ export const ChoirStageView = ({
     return rowAreaTop + rowNumber * rowHeight + rowHeight / 2;
   };
 
-  const getMemberStyle = (member: ChoirMember): React.CSSProperties => {
+  const getMemberStyle = (member: DisplayMember): React.CSSProperties => {
     // If this member is being dragged, allow free movement
     if (dragState.member?.id === member.id) {
       return {
@@ -550,7 +554,7 @@ export const ChoirStageView = ({
     let membersForCalculation = members;
     if (dragState.member) {
       // Create a temporary array with shadow member and without dragged member
-      const shadowMember: ChoirMember = {
+      const shadowMember: DisplayMember = {
         ...dragState.member,
         rowNumber: dragState.shadowRowNumber,
         position: dragState.shadowPosition,
@@ -630,11 +634,12 @@ export const ChoirStageView = ({
           <MemberIcon
             key={member.id}
             member={member}
+            voicePartsConfig={voicePartsConfig}
             onDragStart={handleDragStart}
             onDrag={handleDrag}
             onDragEnd={handleDragEnd}
             onClick={handleMemberClick}
-            onRemove={handleMemberRemove}
+            onRemove={handleMemberRemoveFromSeating}
             isSelected={selectedMember === member.id}
             style={getMemberStyle(member)}
             iconWidth={iconSize.width}
@@ -648,6 +653,7 @@ export const ChoirStageView = ({
           <MemberIcon
             key="shadow"
             member={dragState.member}
+            voicePartsConfig={voicePartsConfig}
             onDragStart={() => {}}
             onDrag={() => {}}
             onDragEnd={() => {}}

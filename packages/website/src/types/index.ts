@@ -3,6 +3,61 @@ export type VoiceSection = 'Soprano' | 'Alto' | 'Tenor' | 'Bass';
 export type AlignmentMode = 'balanced' | 'grid';
 export type PianoPosition = 'left' | 'right';
 
+// Voice Parts Configuration
+export interface VoicePart {
+  id: string;              // Unique identifier (e.g., "soprano-1", "alto")
+  name: string;            // Display name (e.g., "Soprano 1", "Alto")
+  color: string;           // Hex color code (e.g., "#FF69B4")
+  order: number;           // Display order (0-based)
+}
+
+export interface VoicePartsConfiguration {
+  parts: VoicePart[];
+  version: number;         // Schema version for future migrations
+}
+
+// Default SATB voice parts configuration
+export const DEFAULT_VOICE_PARTS: VoicePartsConfiguration = {
+  parts: [
+    { id: 'soprano', name: 'Soprano', color: '#FF69B4', order: 0 },
+    { id: 'alto', name: 'Alto', color: '#9370DB', order: 1 },
+    { id: 'tenor', name: 'Tenor', color: '#4169E1', order: 2 },
+    { id: 'bass', name: 'Bass', color: '#90EE90', order: 3 },
+  ],
+  version: 1,
+};
+
+// Choir Roster (Profile-level)
+export interface RosterMember {
+  id: string;
+  name: string;
+  voicePartId: string;     // References voice part ID
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChoirRoster {
+  members: RosterMember[];
+  version: number;
+}
+
+// Seating Arrangement (Session/Snapshot-level)
+export interface SeatedMember {
+  rosterId: string;        // References RosterMember.id
+  position: number;
+  rowNumber: number;
+}
+
+// Display Member (for UI - joins roster and seating data)
+export interface DisplayMember {
+  id: string;              // rosterId
+  name: string;            // from roster
+  voicePartId: string;     // from roster
+  position: number;        // from seating
+  rowNumber: number;       // from seating
+}
+
+// Legacy ChoirMember interface (for backward compatibility)
 export interface ChoirMember {
   id: string;
   name: string;
@@ -18,8 +73,14 @@ export interface StageSettings {
   title?: string; // Optional title for the choir
 }
 
+// Updated ChoirData interface to support both legacy and new formats
 export interface ChoirData {
-  members: ChoirMember[];
+  // Legacy format (for backward compatibility)
+  members?: ChoirMember[];
+  
+  // New format (roster + seating)
+  seating?: SeatedMember[];
+  
   settings: StageSettings;
   lastUpdated: string;
 }

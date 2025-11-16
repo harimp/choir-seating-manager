@@ -1,0 +1,259 @@
+@use '../styles/variables.scss' as *;
+
+.voice-parts-manager {
+  .voice-parts-list {
+    margin-bottom: 16px;
+  }
+
+  .voice-part-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f0f0f0;
+      border-color: #d0d0d0;
+    }
+
+    .voice-part-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+
+      .voice-part-drag-handle {
+        cursor: grab;
+        color: #999;
+        font-size: 18px;
+        line-height: 1;
+        user-select: none;
+        padding: 0 4px;
+
+        &:active {
+          cursor: grabbing;
+        }
+
+        &:hover {
+          color: #666;
+        }
+      }
+
+      .voice-part-color-preview {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 2px solid #ddd;
+        flex-shrink: 0;
+      }
+
+      .voice-part-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &:hover {
+          color: $primary-color;
+        }
+      }
+
+      .member-count {
+        font-size: 12px;
+        color: #666;
+        font-weight: normal;
+        flex-shrink: 0;
+      }
+    }
+
+    .voice-part-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+
+      .color-picker {
+        width: 32px;
+        height: 32px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0;
+        background: none;
+        transition: border-color 0.2s ease;
+
+        &:hover {
+          border-color: $primary-color;
+        }
+
+        &::-webkit-color-swatch-wrapper {
+          padding: 0;
+        }
+
+        &::-webkit-color-swatch {
+          border: none;
+          border-radius: 2px;
+        }
+
+        &::-moz-color-swatch {
+          border: none;
+          border-radius: 2px;
+        }
+      }
+
+      .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid #ddd;
+        background-color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background-color: $primary-color;
+          color: white;
+          border-color: $primary-color;
+        }
+
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        &.btn-delete {
+          font-size: 24px;
+          color: $danger-color;
+
+          &:hover:not(:disabled) {
+            background-color: $danger-color;
+            color: white;
+            border-color: $danger-color;
+          }
+        }
+      }
+    }
+
+    .voice-part-edit {
+      flex: 1;
+
+      .edit-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid $primary-color;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        outline: none;
+
+        &:focus {
+          border-color: darken($primary-color, 10%);
+        }
+      }
+    }
+  }
+
+  .error-message {
+    padding: 10px 12px;
+    background-color: #fee;
+    border: 1px solid #fcc;
+    border-radius: 4px;
+    color: $danger-color;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .add-voice-part-form {
+    padding: 12px;
+    background-color: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+
+    .add-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid $primary-color;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      outline: none;
+
+      &:focus {
+        border-color: darken($primary-color, 10%);
+      }
+    }
+
+    .add-form-actions {
+      display: flex;
+      gap: 8px;
+
+      .btn {
+        flex: 1;
+      }
+    }
+  }
+
+  .btn-add-voice-part {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+// Button styles (if not already defined globally)
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.btn-primary {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+  }
+
+  &.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+
+    &:hover {
+      background-color: darken(#6c757d, 10%);
+    }
+  }
+
+  &.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

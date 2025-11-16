@@ -1,0 +1,334 @@
+@import '../styles/variables.scss';
+
+.orphaned-members-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.orphaned-members-dialog {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 2rem;
+      line-height: 1;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #f0f0f0;
+        color: #333;
+      }
+    }
+  }
+
+  .dialog-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+
+    .dialog-description {
+      margin: 0 0 20px 0;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.1rem;
+      color: #333;
+    }
+  }
+
+  .missing-parts-section {
+    margin-bottom: 24px;
+
+    .missing-parts-list {
+      margin-bottom: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 12px;
+      background-color: #f9f9f9;
+
+      .missing-part-item {
+        padding: 8px 0;
+
+        &:not(:last-child) {
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        label {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          gap: 8px;
+
+          input[type='checkbox'] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+          }
+
+          .missing-part-name {
+            font-weight: 500;
+            color: #333;
+          }
+        }
+      }
+    }
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    margin: 24px 0;
+    color: #999;
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: #e0e0e0;
+    }
+
+    span {
+      padding: 0 16px;
+    }
+  }
+
+  .reassignment-section {
+    .bulk-reassign {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background-color: #f0f7ff;
+      border-radius: 4px;
+      border: 1px solid #b3d9ff;
+
+      label {
+        font-weight: 500;
+        color: #333;
+        white-space: nowrap;
+      }
+
+      select {
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        cursor: pointer;
+
+        &:focus {
+          outline: none;
+          border-color: #4169E1;
+        }
+      }
+    }
+
+    .members-list {
+      margin-bottom: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+
+      .orphaned-member-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        gap: 12px;
+
+        &:not(:last-child) {
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        &:hover {
+          background-color: #f9f9f9;
+        }
+
+        .member-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex: 1;
+          min-width: 0;
+
+          .member-name {
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .member-old-part {
+            color: #999;
+            font-size: 0.9rem;
+            white-space: nowrap;
+          }
+        }
+
+        .member-reassign {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+
+          .arrow {
+            color: #999;
+            font-size: 1.2rem;
+          }
+
+          .reassign-select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            min-width: 120px;
+
+            &:focus {
+              outline: none;
+              border-color: #4169E1;
+            }
+          }
+
+          .no-parts-available {
+            color: #999;
+            font-style: italic;
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+  }
+
+  .dialog-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &.btn-primary {
+      background-color: #4169E1;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background-color: #3557c7;
+      }
+
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+
+    &.btn-secondary {
+      background-color: #f0f0f0;
+      color: #333;
+
+      &:hover {
+        background-color: #e0e0e0;
+      }
+    }
+  }
+}
+
+// Responsive design for smaller screens
+@media (max-width: 768px) {
+  .orphaned-members-dialog {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+
+    .dialog-content {
+      .reassignment-section {
+        .bulk-reassign {
+          flex-direction: column;
+          align-items: stretch;
+
+          select {
+            width: 100%;
+          }
+        }
+
+        .members-list {
+          .orphaned-member-item {
+            flex-direction: column;
+            align-items: stretch;
+
+            .member-info {
+              margin-bottom: 8px;
+            }
+
+            .member-reassign {
+              justify-content: flex-end;
+
+              .reassign-select {
+                flex: 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

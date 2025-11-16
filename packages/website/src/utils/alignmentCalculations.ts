@@ -3,6 +3,13 @@ import { ChoirMember, AlignmentMode } from '../types';
 export const MEMBER_WIDTH = 60; // Width in pixels
 export const MEMBER_SPACING = 20; // Spacing between members in pixels
 
+// Type that represents any member with position and row information
+type PositionedMember = {
+  id: string;
+  position: number;
+  rowNumber: number;
+};
+
 /**
  * Distributes members evenly across the specified number of rows
  */
@@ -24,10 +31,11 @@ export function distributeMembers(
 
 /**
  * Calculates display position (x percentage) for a member based on alignment mode
+ * Works with both ChoirMember and DisplayMember types
  */
 export function calculateMemberDisplayPosition(
-  member: ChoirMember,
-  members: ChoirMember[],
+  member: PositionedMember,
+  members: PositionedMember[],
   alignmentMode: AlignmentMode,
   stageWidth: number,
   iconWidth: number
@@ -71,7 +79,7 @@ export function calculateMemberDisplayPosition(
 /**
  * Groups members by row number
  */
-function groupMembersByRow(members: ChoirMember[]): Record<number, ChoirMember[]> {
+function groupMembersByRow(members: PositionedMember[]): Record<number, PositionedMember[]> {
   return members.reduce((acc, member) => {
     const row = member.rowNumber;
     if (!acc[row]) {
@@ -79,7 +87,7 @@ function groupMembersByRow(members: ChoirMember[]): Record<number, ChoirMember[]
     }
     acc[row].push(member);
     return acc;
-  }, {} as Record<number, ChoirMember[]>);
+  }, {} as Record<number, PositionedMember[]>);
 }
 
 /**

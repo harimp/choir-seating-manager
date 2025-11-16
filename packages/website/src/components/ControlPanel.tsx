@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import { ChoirMember, VoiceSection, StageSettings, AlignmentMode, PianoPosition, ChoirData } from '../types';
+import {
+  StageSettings,
+  AlignmentMode,
+  PianoPosition,
+  ChoirData,
+  VoicePartsConfiguration,
+  ChoirRoster,
+  SeatedMember,
+  DisplayMember,
+} from '../types';
 import { SnapshotManager } from './SnapshotManager';
+import { VoicePartsManager } from './VoicePartsManager';
+import { ChoirRosterManager } from './ChoirRosterManager';
+import { SeatingSelector } from './SeatingSelector';
 import './ControlPanel.scss';
 
 interface ControlPanelProps {
@@ -8,9 +20,14 @@ interface ControlPanelProps {
   onToggle: () => void;
   settings: StageSettings;
   onSettingsChange: (settings: Partial<StageSettings>) => void;
-  members: ChoirMember[];
-  onAddMember: (name: string, voiceSection: VoiceSection) => void;
-  onRemoveMember: (id: string) => void;
+  voicePartsConfig: VoicePartsConfiguration;
+  onVoicePartsChange: (config: VoicePartsConfiguration) => void;
+  roster: ChoirRoster;
+  onRosterChange: (roster: ChoirRoster) => void;
+  seating: SeatedMember[];
+  onSeatingChange: (seating: SeatedMember[]) => void;
+  displayMembers: DisplayMember[];
+  onRemoveMemberFromSeating: (rosterId: string) => void;
   onExport: () => void;
   onImport: (file: File) => void;
   sessionCode?: string;
@@ -22,24 +39,20 @@ export const ControlPanel = ({
   onToggle,
   settings,
   onSettingsChange,
-  members,
-  onAddMember,
-  onRemoveMember,
+  voicePartsConfig,
+  onVoicePartsChange,
+  roster,
+  onRosterChange,
+  seating,
+  onSeatingChange,
+  displayMembers,
+  onRemoveMemberFromSeating,
   onExport,
   onImport,
   sessionCode,
   onRestoreSnapshot,
 }: ControlPanelProps) => {
-  const [memberName, setMemberName] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState<VoiceSection>('Soprano');
-
-  const handleAddMember = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (memberName.trim()) {
-      onAddMember(memberName.trim(), selectedVoice);
-      setMemberName('');
-    }
-  };
+  const [showSeatingSelector, setShowSeatingSelector] = useState(false);
 
   const handleImportClick = () => {
     const input = document.createElement('input');
@@ -54,11 +67,12 @@ export const ControlPanel = ({
     input.click();
   };
 
-  const getMembersByVoice = (voice: VoiceSection) => {
-    return members.filter(m => m.voiceSection === voice);
+  // Group seated members by voice part
+  const getSeatedMembersByVoicePart = (voicePartId: string) => {
+    return displayMembers.filter(m => m.voicePartId === voicePartId);
   };
 
-  const voiceSections: VoiceSection[] = ['Soprano', 'Alto', 'Tenor', 'Bass'];
+  const sortedVoiceParts = [...voicePartsConfig.parts].sort((a, b) => a.order - b.order);
 
   return (
     <>
@@ -82,6 +96,86 @@ export const ControlPanel = ({
       <div className={`control-panel ${isOpen ? 'open' : ''}`}>
         <div className="control-panel-content">
           <h2>Choir Manager</h2>
+
+          {/* Voice Parts Configuration */}
+          <section className="panel-section">
+            <h3>Voice Parts</h3>
+            <VoicePartsManager
+              configuration={voicePartsConfig}
+              onChange={onVoicePartsChange}
+              roster={roster}
+            />
+          </section>
+
+          {/* Choir Roster */}
+          <section className="panel-section">
+            <ChoirRosterManager
+              roster={roster}
+              voiceParts={voicePartsConfig}
+              onRosterChange={onRosterChange}
+              currentSeating={seating}
+            />
+          </section>
+
+          {/* Current Seating */}
+          <section className="panel-section">
+            <h3>Current Seating ({displayMembers.length} members)</h3>
+            
+            <button
+              className="btn btn-primary btn-add-seating"
+              onClick={() => setShowSeatingSelector(true)}
+            >
+              + Add from Roster
+            </button>
+
+            <div className="seated-members-list">
+              {sortedVoiceParts.map(voicePart => {
+                const voiceMembers = getSeatedMembersByVoicePart(voicePart.id);
+                if (voiceMembers.length === 0) return null;
+                
+                return (
+                  <div key={voicePart.id} className="voice-group">
+                    <h4
+                      className="voice-header"
+                      style={{ backgroundColor: voicePart.color }}
+                    >
+                      {voicePart.name} ({voiceMembers.length})
+                    </h4>
+                    <ul>
+                      {voiceMembers.map(member => (
+                        <li key={member.id} className="member-item">
+                          <span className="member-name">{member.name}</span>
+                          <button
+                            className="btn-remove"
+                            onClick={() => onRemoveMemberFromSeating(member.id)}
+                            title="Remove from seating"
+                          >
+                            ×
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+              {displayMembers.length === 0 && (
+                <p className="empty-message">No members in seating. Click "Add from Roster" to add members.</p>
+              )}
+            </div>
+
+            {displayMembers.length > 0 && (
+              <button
+                className="btn btn-secondary btn-clear-seating"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to remove all members from seating?')) {
+                    onSeatingChange([]);
+                  }
+                }}
+              >
+                Clear All Seating
+              </button>
+            )}
+          </section>
 
           {/* Layout Settings */}
           <section className="panel-section">
@@ -163,75 +257,6 @@ export const ControlPanel = ({
             </div>
           </section>
 
-          {/* Add Member */}
-          <section className="panel-section">
-            <h3>Add Member</h3>
-            <form onSubmit={handleAddMember}>
-              <div className="form-group">
-                <label htmlFor="member-name">Name:</label>
-                <input
-                  id="member-name"
-                  type="text"
-                  value={memberName}
-                  onChange={(e) => setMemberName(e.target.value)}
-                  placeholder="Enter name"
-                  autoComplete="off"
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="voice-section">Voice Section:</label>
-                <select
-                  id="voice-section"
-                  value={selectedVoice}
-                  onChange={(e) => setSelectedVoice(e.target.value as VoiceSection)}
-                >
-                  {voiceSections.map(voice => (
-                    <option key={voice} value={voice}>{voice}</option>
-                  ))}
-                </select>
-              </div>
-              <button type="submit" className="btn btn-primary" disabled={!memberName.trim()}>
-                Add Member
-              </button>
-            </form>
-          </section>
-
-          {/* Member List */}
-          <section className="panel-section member-list-section">
-            <h3>Members ({members.length})</h3>
-            <div className="member-list">
-              {voiceSections.map(voice => {
-                const voiceMembers = getMembersByVoice(voice);
-                if (voiceMembers.length === 0) return null;
-                
-                return (
-                  <div key={voice} className="voice-group">
-                    <h4 className={`voice-header voice-${voice.toLowerCase()}`}>
-                      {voice} ({voiceMembers.length})
-                    </h4>
-                    <ul>
-                      {voiceMembers.map(member => (
-                        <li key={member.id} className="member-item">
-                          <span className="member-name">{member.name}</span>
-                          <button
-                            className="btn-remove"
-                            onClick={() => onRemoveMember(member.id)}
-                            title="Remove member"
-                          >
-                            ×
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-              {members.length === 0 && (
-                <p className="empty-message">No members added yet</p>
-              )}
-            </div>
-          </section>
-
           {/* Data Management */}
           <section className="panel-section">
             <h3>Data Management</h3>
@@ -251,7 +276,7 @@ export const ControlPanel = ({
               <SnapshotManager
                 sessionCode={sessionCode}
                 currentChoirData={{
-                  members,
+                  seating,
                   settings,
                   lastUpdated: new Date().toISOString(),
                 }}
@@ -261,6 +286,24 @@ export const ControlPanel = ({
           )}
         </div>
       </div>
+
+      {/* Seating Selector Modal */}
+      {showSeatingSelector && (
+        <div className="modal-overlay" onClick={() => setShowSeatingSelector(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <SeatingSelector
+              roster={roster}
+              voiceParts={voicePartsConfig}
+              currentSeating={seating}
+              onSeatingChange={(newSeating) => {
+                onSeatingChange(newSeating);
+                setShowSeatingSelector(false);
+              }}
+              onClose={() => setShowSeatingSelector(false)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

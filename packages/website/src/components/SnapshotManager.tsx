@@ -13,7 +13,7 @@ import './SnapshotManager.scss';
 interface SnapshotManagerProps {
   sessionCode: string;
   currentChoirData: ChoirData;
-  onRestore: (choirData: ChoirData) => void;
+  onRestore: (choirData: ChoirData) => void | Promise<void>;
 }
 
 export const SnapshotManager = ({
@@ -125,7 +125,7 @@ export const SnapshotManager = ({
     setError(null);
     try {
       const snapshot = await getSnapshot(sessionCode, snapshotToRestore);
-      onRestore(snapshot.choirData);
+      await onRestore(snapshot.choirData);
       setSuccessMessage('Snapshot restored successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
       setShowRestoreDialog(false);

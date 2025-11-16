@@ -216,11 +216,11 @@
   }
 }
 
-.member-list-section {
-  .member-list {
-    max-height: 300px;
-    overflow-y: auto;
-  }
+.seated-members-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 16px;
+  margin-bottom: 16px;
 
   .voice-group {
     margin-bottom: 16px;
@@ -231,24 +231,7 @@
       margin-bottom: 8px;
       color: white;
       font-size: 13px;
-
-      &.voice-soprano {
-        background-color: #FFD700;
-        color: #333;
-      }
-
-      &.voice-alto {
-        background-color: #FF69B4;
-      }
-
-      &.voice-tenor {
-        background-color: #90EE90;
-        color: #333;
-      }
-
-      &.voice-bass {
-        background-color: #4169E1;
-      }
+      font-weight: 600;
     }
 
     ul {
@@ -305,5 +288,52 @@
     font-size: 14px;
     font-style: italic;
     padding: 20px;
+  }
+}
+
+.btn-add-seating {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.btn-clear-seating {
+  width: 100%;
+  margin-top: 8px;
+}
+
+// Modal styles for SeatingSelector
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

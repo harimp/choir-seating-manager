@@ -186,18 +186,29 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     // Handle known errors
     if (error instanceof Error) {
+      // 404 errors
       if (error.message === 'Session not found' || error.message === 'Snapshot not found') {
         return errorResponse(404, error.message);
       }
-      if (error.message.includes('Invalid choir data') || 
-          error.message.includes('Session code is required') ||
-          error.message.includes('Session name is required') ||
-          error.message.includes('already exists') ||
-          error.message.includes('must be 50 characters or less') ||
-          error.message.includes('Snapshot name') ||
-          error.message.includes('Choir data is required') ||
-          error.message.includes('members array is required') ||
-          error.message.includes('settings are required')) {
+      
+      // 400 validation errors
+      if (
+        error.message.includes('Invalid') ||
+        error.message.includes('is required') ||
+        error.message.includes('cannot be empty') ||
+        error.message.includes('already exists') ||
+        error.message.includes('must be') ||
+        error.message.includes('can only contain') ||
+        error.message.includes('either members (legacy) or seating (new format)') ||
+        error.message.includes('rosterId') ||
+        error.message.includes('position') ||
+        error.message.includes('rowNumber') ||
+        error.message.includes('voiceSection') ||
+        error.message.includes('settings') ||
+        error.message.includes('alignmentMode') ||
+        error.message.includes('pianoPosition') ||
+        error.message.includes('numberOfRows')
+      ) {
         return errorResponse(400, error.message);
       }
     }

@@ -1,0 +1,396 @@
+@use '../styles/variables.scss' as *;
+
+.choir-roster-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .roster-header {
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .roster-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .search-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        border-color: $primary-color;
+      }
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+
+    .btn {
+      flex-shrink: 0;
+    }
+  }
+
+  .add-member-form {
+    padding: 12px;
+    background-color: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid $primary-color;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+
+      &:focus {
+        border-color: darken($primary-color, 10%);
+      }
+    }
+
+    .form-select {
+      cursor: pointer;
+      background-color: white;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 8px;
+
+      .btn {
+        flex: 1;
+      }
+    }
+  }
+
+  .error-message {
+    padding: 10px 12px;
+    background-color: #fee;
+    border: 1px solid #fcc;
+    border-radius: 4px;
+    color: $danger-color;
+    font-size: 13px;
+  }
+
+  .filter-toggle {
+    display: flex;
+    gap: 4px;
+    background-color: #f0f0f0;
+    padding: 4px;
+    border-radius: 6px;
+
+    .filter-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background-color: transparent;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #e0e0e0;
+        color: #333;
+      }
+
+      &.active {
+        background-color: white;
+        color: $primary-color;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+
+  .roster-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 4px;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+
+      &:hover {
+        background: #999;
+      }
+    }
+  }
+
+  .voice-part-group {
+    .voice-part-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background-color: #f5f5f5;
+      border-left: 4px solid;
+      border-radius: 4px;
+      margin-bottom: 8px;
+
+      .voice-part-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .member-count {
+        font-size: 12px;
+        color: #666;
+        font-weight: normal;
+      }
+    }
+
+    &.orphaned {
+      .voice-part-header {
+        background-color: #fff3cd;
+        border-left-color: #ffc107;
+      }
+    }
+
+    .members-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-left: 8px;
+    }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #fafafa;
+        border-color: #d0d0d0;
+      }
+
+      .member-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+
+        .seated-indicator {
+          color: $primary-color;
+          font-weight: bold;
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+
+        .member-name {
+          font-size: 14px;
+          color: #333;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .orphaned-label {
+          font-size: 11px;
+          color: #856404;
+          font-style: italic;
+          flex-shrink: 0;
+        }
+      }
+
+      .member-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+
+        .btn-icon {
+          width: 28px;
+          height: 28px;
+          padding: 0;
+          border: 1px solid #ddd;
+          background-color: white;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #666;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: $primary-color;
+            color: white;
+            border-color: $primary-color;
+          }
+
+          &.btn-delete {
+            font-size: 20px;
+            color: $danger-color;
+
+            &:hover {
+              background-color: $danger-color;
+              color: white;
+              border-color: $danger-color;
+            }
+          }
+        }
+      }
+
+      .member-edit-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex: 1;
+
+        .edit-input,
+        .edit-select {
+          padding: 6px 10px;
+          border: 2px solid $primary-color;
+          border-radius: 4px;
+          font-size: 13px;
+          outline: none;
+
+          &:focus {
+            border-color: darken($primary-color, 10%);
+          }
+        }
+
+        .edit-input {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .edit-select {
+          flex-shrink: 0;
+          cursor: pointer;
+          background-color: white;
+          min-width: 100px;
+        }
+
+        .edit-actions {
+          display: flex;
+          gap: 4px;
+          flex-shrink: 0;
+
+          .btn-icon {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+
+            &.btn-save {
+              color: #28a745;
+
+              &:hover {
+                background-color: #28a745;
+                color: white;
+                border-color: #28a745;
+              }
+            }
+
+            &.btn-cancel {
+              color: $danger-color;
+              font-size: 20px;
+
+              &:hover {
+                background-color: $danger-color;
+                color: white;
+                border-color: $danger-color;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    font-style: italic;
+  }
+}
+
+// Button styles (ensure consistency)
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.btn-primary {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+  }
+
+  &.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+
+    &:hover {
+      background-color: darken(#6c757d, 10%);
+    }
+  }
+
+  &.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
