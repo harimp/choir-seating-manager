@@ -65,9 +65,83 @@ export const ChoirStageView = ({
     shadowYPercent: 0,
   });
   
-  // Fixed 16:9 canvas dimensions
+  // Canvas dimensions - width is fixed, height expands if needed
   const CANVAS_WIDTH = 1600;
-  const CANVAS_HEIGHT = 900;
+  const BASE_CANVAS_HEIGHT = 900;
+  
+  // Calculate icon size and canvas height dynamically
+  const calculateDimensions = (): { 
+    canvasHeight: number;
+    conductorAreaHeight: number;
+    iconWidth: number; 
+    iconHeight: number; 
+    textSize: number;
+  } => {
+    // Find maximum members in any single row
+    const membersByRow = members.reduce((acc, member) => {
+      acc[member.rowNumber] = (acc[member.rowNumber] || 0) + 1;
+      return acc;
+    }, {} as Record<number, number>);
+    
+    const maxMembersInRow = Math.max(...Object.values(membersByRow), 1);
+
+    // Calculate icon width based on horizontal space
+    const usableWidth = CANVAS_WIDTH * 0.90; // Use 90% width
+    const availableWidthPerMember = usableWidth / maxMembersInRow;
+    let iconWidth = Math.min(
+      availableWidthPerMember * 0.85,  // 85% spacing between members
+      120                               // maximum cap for good visibility
+    );
+    iconWidth = Math.max(iconWidth, 60); // minimum 60px for readability
+
+    // Maintain 3:4 aspect ratio (width:height)
+    const iconHeight = iconWidth * (4 / 3);
+
+    // Calculate canvas height based on rows
+    const CONDUCTOR_AREA_HEIGHT = 225; // Fixed height for conductor/piano area (25% of 900)
+    const BOTTOM_MARGIN = 45; // Fixed bottom margin (5% of 900)
+    const VERTICAL_PADDING = 40; // Minimum padding between rows
+    
+    // Calculate available member area in base canvas
+    const baseMemberArea = BASE_CANVAS_HEIGHT - CONDUCTOR_AREA_HEIGHT - BOTTOM_MARGIN;
+    const baseRowHeight = baseMemberArea / settings.numberOfRows;
+    
+    // Calculate minimum required row height
+    const minRequiredRowHeight = iconHeight + VERTICAL_PADDING;
+    
+    let canvasHeight: number;
+    
+    if (baseRowHeight >= minRequiredRowHeight) {
+      // Row height is sufficient - use base canvas and proportionate spacing
+      canvasHeight = BASE_CANVAS_HEIGHT;
+    } else {
+      // Row height is too small - expand canvas to fit minimum row height
+      const requiredMemberArea = minRequiredRowHeight * settings.numberOfRows;
+      canvasHeight = CONDUCTOR_AREA_HEIGHT + requiredMemberArea + BOTTOM_MARGIN;
+    }
+    
+    const conductorAreaHeight = CONDUCTOR_AREA_HEIGHT;
+
+    // Calculate text size: scales with icon (larger for display viewing)
+    const textSize = Math.max(15, Math.min(iconWidth * 0.18, 20));
+
+    return { 
+      canvasHeight,
+      conductorAreaHeight,
+      iconWidth: Math.round(iconWidth), 
+      iconHeight: Math.round(iconHeight), 
+      textSize: Math.round(textSize) 
+    };
+  };
+
+  const dimensions = calculateDimensions();
+  const CANVAS_HEIGHT = dimensions.canvasHeight;
+  const CONDUCTOR_AREA_HEIGHT = dimensions.conductorAreaHeight;
+  const iconSize = {
+    width: dimensions.iconWidth,
+    height: dimensions.iconHeight,
+    textSize: dimensions.textSize,
+  };
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -110,7 +184,7 @@ export const ChoirStageView = ({
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+  }, [CANVAS_HEIGHT]); // Recalculate when canvas height changes
 
   // Handle zoom with mouse wheel
   useEffect(() => {
@@ -301,46 +375,6 @@ export const ChoirStageView = ({
     }
   };
 
-  // Calculate icon size based on fixed canvas and member count
-  const calculateIconSize = (): { width: number; height: number; textSize: number } => {
-    // Find maximum members in any single row
-    const membersByRow = members.reduce((acc, member) => {
-      acc[member.rowNumber] = (acc[member.rowNumber] || 0) + 1;
-      return acc;
-    }, {} as Record<number, number>);
-    
-    const maxMembersInRow = Math.max(...Object.values(membersByRow), 1);
-
-    // Calculate available space on fixed 16:9 canvas
-    const usableWidth = CANVAS_WIDTH * 0.90; // Use 90% width
-    const availableWidthPerMember = usableWidth / maxMembersInRow;
-    const rowAreaHeight = CANVAS_HEIGHT * 0.65; // Rows occupy 65% of height
-    const availableHeightPerRow = rowAreaHeight / settings.numberOfRows;
-
-    // Calculate icon width based on fixed canvas
-    let iconWidth = Math.min(
-      availableWidthPerMember * 0.85,  // 85% spacing between members
-      availableHeightPerRow * 0.75,    // 75% of row height
-      120                               // maximum cap for good visibility
-    );
-    iconWidth = Math.max(iconWidth, 60); // minimum 60px for readability
-
-    // Maintain 3:4 aspect ratio (width:height)
-    const iconHeight = iconWidth * (4 / 3);
-
-    // Calculate text size: scales with icon (larger for display viewing)
-    const textSize = Math.max(15, Math.min(iconWidth * 0.18, 20));
-
-    return { 
-      width: Math.round(iconWidth), 
-      height: Math.round(iconHeight), 
-      textSize: Math.round(textSize) 
-    };
-  };
-
-  const iconSize = calculateIconSize();
-
-
   const handleDragStart = (member: DisplayMember) => {
     if (!stageRef.current) return;
     
@@ -381,9 +415,13 @@ export const ChoirStageView = ({
     const x = (clientX - rect.left - panOffset.x) / zoom;
     const y = (clientY - rect.top - panOffset.y) / zoom;
 
-    // Calculate which row the cursor is currently hovering over (on fixed canvas)
-    const rowAreaTop = CANVAS_HEIGHT * 0.25;  // Match getRowY: 25% from top
-    const rowAreaHeight = CANVAS_HEIGHT * 0.65;  // Match getRowY: 65% height
+    // Calculate which row the cursor is currently hovering over (on dynamic canvas)
+    const BOTTOM_MARGIN = 45; // Fixed pixel margin
+    
+    // Calculate member area - rows are distributed proportionately
+    const rowAreaTop = CONDUCTOR_AREA_HEIGHT;
+    const rowAreaHeight = CANVAS_HEIGHT - CONDUCTOR_AREA_HEIGHT - BOTTOM_MARGIN;
+    
     const shadowRow = getRowFromY(
       y,
       CANVAS_HEIGHT,
@@ -563,12 +601,20 @@ export const ChoirStageView = ({
     }
   };
 
-  // Calculate row positions (percentages on fixed canvas)
+  // Calculate row positions (percentages on dynamic canvas)
   const getRowY = (rowNumber: number): number => {
-    const rowAreaTop = 25; // Start at 25% from top
-    const rowAreaHeight = 65; // Occupy 65% of height
-    const rowHeight = rowAreaHeight / settings.numberOfRows;
-    return rowAreaTop + rowNumber * rowHeight + rowHeight / 2;
+    const BOTTOM_MARGIN = 45; // Fixed pixel margin
+    
+    // Calculate member area and distribute rows proportionately
+    const memberArea = CANVAS_HEIGHT - CONDUCTOR_AREA_HEIGHT - BOTTOM_MARGIN;
+    const rowHeight = memberArea / settings.numberOfRows;
+    
+    // Position row at its center
+    const rowAreaTop = CONDUCTOR_AREA_HEIGHT;
+    const rowYPixels = rowAreaTop + (rowNumber * rowHeight) + (rowHeight / 2);
+    
+    // Convert to percentage
+    return (rowYPixels / CANVAS_HEIGHT) * 100;
   };
 
   const getMemberStyle = (member: DisplayMember): React.CSSProperties => {
@@ -647,7 +693,13 @@ export const ChoirStageView = ({
         onTouchEnd={handleTouchEnd}
       >
         {/* Center line */}
-        <div className="center-line" />
+        <div 
+          className="center-line"
+          style={{
+            top: `${CONDUCTOR_AREA_HEIGHT}px`,
+            height: `${CANVAS_HEIGHT - CONDUCTOR_AREA_HEIGHT - 45}px`,
+          }}
+        />
 
         {/* Conductor */}
         <div className="conductor-position">
@@ -700,7 +752,12 @@ export const ChoirStageView = ({
       </div>
 
         {/* Centre label */}
-        <div className="centre-label">CENTRE</div>
+        <div 
+          className="centre-label"
+          style={{
+            top: `${CANVAS_HEIGHT - 35}px`, // Position 35px from bottom
+          }}
+        >CENTRE</div>
       </div>
     </div>
   );
