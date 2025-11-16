@@ -12,6 +12,8 @@ import {
   RosterMember,
   SeatedMember,
   DisplayMember,
+  LegacySessionItem,
+  ChoirMember,
 } from './types';
 import {
   loadChoirData,
@@ -156,10 +158,10 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
           }
           
           setSettings(session.settings);
-        } else if ((session as any).choirData) {
+        } else if ('choirData' in session) {
           // Old schema - migrate to new format
           console.log('Migrating session from old schema to new schema...');
-          const legacySession = session as any;
+          const legacySession = session as unknown as LegacySessionItem;
           const choirData = legacySession.choirData;
           
           // Convert legacy members to roster + seating
@@ -168,7 +170,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
           
           if (choirData.members) {
             // Legacy format with full member data
-            migratedRoster = choirData.members.map((member: any) => ({
+            migratedRoster = choirData.members.map((member: ChoirMember) => ({
               id: member.id,
               name: member.name,
               voicePartId: member.voiceSection.toLowerCase(), // Convert "Soprano" -> "soprano"
@@ -176,7 +178,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
               updatedAt: new Date().toISOString(),
             }));
             
-            migratedSeating = choirData.members.map((member: any) => ({
+            migratedSeating = choirData.members.map((member: ChoirMember) => ({
               rosterId: member.id,
               position: member.position,
               rowNumber: member.rowNumber,
