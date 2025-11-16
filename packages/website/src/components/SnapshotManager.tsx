@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChoirData, SnapshotListItem } from '../types';
 import { 
   createSnapshot, 
@@ -39,12 +39,7 @@ export const SnapshotManager = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [snapshotToDelete, setSnapshotToDelete] = useState<{ id: string; name: string } | null>(null);
 
-  // Fetch snapshots on component mount
-  useEffect(() => {
-    fetchSnapshots();
-  }, [sessionCode]);
-
-  const fetchSnapshots = async () => {
+  const fetchSnapshots = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -60,7 +55,12 @@ export const SnapshotManager = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionCode]);
+
+  // Fetch snapshots on component mount
+  useEffect(() => {
+    fetchSnapshots();
+  }, [fetchSnapshots]);
 
   const formatTimestamp = (isoString: string): string => {
     const date = new Date(isoString);
