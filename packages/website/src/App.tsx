@@ -164,7 +164,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
           const duplicatesFound = session.choirData.members.length - newMemberCount;
           
           // Save updated roster
-          saveChoirRoster(updatedRoster);
+          saveChoirRoster();
           setRoster(updatedRoster);
           
           // Set migrated seating
@@ -295,7 +295,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     setVoicePartsConfig(newConfig);
     
     try {
-      saveVoicePartsConfig(newConfig);
+      saveVoicePartsConfig();
     } catch (error) {
       console.error('Failed to save voice parts configuration:', error);
       setError(error instanceof Error ? error.message : 'Failed to save voice parts configuration');
@@ -318,7 +318,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     setRoster(updatedRoster);
     
     try {
-      saveChoirRoster(updatedRoster);
+      saveChoirRoster();
     } catch (error) {
       console.error('Failed to save roster:', error);
       setError(error instanceof Error ? error.message : 'Failed to save roster');
@@ -483,7 +483,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     setRoster(updatedRoster);
     
     try {
-      saveChoirRoster(updatedRoster);
+      saveChoirRoster();
     } catch (error) {
       console.error('Failed to save roster after reassignment:', error);
       setError(error instanceof Error ? error.message : 'Failed to save roster');
@@ -505,7 +505,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     setVoicePartsConfig(newConfig);
     
     try {
-      saveVoicePartsConfig(newConfig);
+      saveVoicePartsConfig();
     } catch (error) {
       console.error('Failed to save voice parts configuration:', error);
       setError(error instanceof Error ? error.message : 'Failed to save voice parts configuration');

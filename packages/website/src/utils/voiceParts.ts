@@ -36,7 +36,7 @@ export function loadVoicePartsConfig(): VoicePartsConfiguration {
  * Save voice parts configuration (localStorage removed)
  * No-op function to prevent data merging across sessions
  */
-export function saveVoicePartsConfig(_config: VoicePartsConfiguration): void {
+export function saveVoicePartsConfig(): void {
   // No-op: localStorage removed to prevent data merging across sessions
   console.log('saveVoicePartsConfig called (localStorage disabled)');
 }

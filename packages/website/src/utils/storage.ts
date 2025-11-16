@@ -1,7 +1,7 @@
 import { ChoirData, ChoirMember, VoiceSection, StageSettings, SeatedMember, ChoirRoster, VoicePartsConfiguration } from '../types';
 import { loadChoirRoster, saveChoirRoster } from './roster';
 import { migrateLegacyMembers } from './seating';
-import { loadVoicePartsConfig, saveVoicePartsConfig } from './voiceParts';
+import { loadVoicePartsConfig } from './voiceParts';
 
 const DEFAULT_SETTINGS: StageSettings = {
   numberOfRows: 3,
@@ -78,7 +78,7 @@ export function loadChoirData(): { data: ChoirData; migration: MigrationResult }
         const duplicatesFound = data.members!.length - newMemberCount;
         
         // Save updated roster
-        saveChoirRoster(roster);
+        saveChoirRoster();
         
         // Convert to new format
         const migratedData: ChoirData = {
@@ -88,7 +88,7 @@ export function loadChoirData(): { data: ChoirData; migration: MigrationResult }
         };
         
         // Save migrated data
-        saveChoirData(migratedData);
+        saveChoirData();
         
         console.log(`Migration complete: ${roster.members.length} roster members, ${seating.length} seated`);
         
@@ -143,7 +143,7 @@ export function loadChoirData(): { data: ChoirData; migration: MigrationResult }
   */
 }
 
-export function saveChoirData(_data: ChoirData): void {
+export function saveChoirData(): void {
   // No-op: localStorage removed to prevent data merging across sessions
   // Data is now only saved via API when a session code is provided
   console.log('saveChoirData called (localStorage disabled)');
@@ -262,7 +262,7 @@ export async function importChoirData(file: File): Promise<{ data: ChoirData; mi
       try {
         const importedData = JSON.parse(e.target?.result as string) as ImportedData;
         const migration: MigrationResult = { wasMigrated: false };
-        let hasOrphanedMembers = false;
+        const hasOrphanedMembers = false;
         
         // Validate and ensure settings exist
         if (!importedData.settings) {
@@ -271,29 +271,13 @@ export async function importChoirData(file: File): Promise<{ data: ChoirData; mi
         
         // Import voice parts configuration if present
         if (importedData.voicePartsConfig && importedData.voicePartsConfig.parts) {
-          const existingConfig = loadVoicePartsConfig();
-          const mergedConfig = mergeVoicePartsConfigs(existingConfig, importedData.voicePartsConfig);
-          saveVoicePartsConfig(mergedConfig);
-          console.log(`Imported voice parts configuration: ${importedData.voicePartsConfig.parts.length} voice parts`);
+          // Note: Voice parts config merging disabled (localStorage removed)
+          console.log(`Voice parts configuration in import file (not applied): ${importedData.voicePartsConfig.parts.length} voice parts`);
         }
         
-        // If imported data includes roster, merge it with existing roster
+        // If imported data includes roster, note it but don't merge (localStorage removed)
         if (importedData.roster && Array.isArray(importedData.roster.members)) {
-          const existingRoster = loadChoirRoster();
-          const mergedRoster = mergeRosters(existingRoster, importedData.roster);
-          saveChoirRoster(mergedRoster);
-          console.log(`Imported roster: ${importedData.roster.members.length} members`);
-          
-          // Check for orphaned members after import
-          const currentConfig = loadVoicePartsConfig();
-          const orphanedCount = mergedRoster.members.filter(
-            member => !currentConfig.parts.some(part => part.id === member.voicePartId)
-          ).length;
-          
-          if (orphanedCount > 0) {
-            console.warn(`Found ${orphanedCount} orphaned members after import`);
-            hasOrphanedMembers = true;
-          }
+          console.log(`Roster in import file (not applied): ${importedData.roster.members.length} members`);
         }
         
         // Detect format and handle accordingly
@@ -318,7 +302,7 @@ export async function importChoirData(file: File): Promise<{ data: ChoirData; mi
           const duplicatesFound = legacyMembers.length - newMemberCount;
           
           // Save updated roster
-          saveChoirRoster(roster);
+          saveChoirRoster();
           
           const migratedData: ChoirData = {
             seating,
@@ -367,62 +351,7 @@ export async function importChoirData(file: File): Promise<{ data: ChoirData; mi
   });
 }
 
-/**
- * Merge imported roster with existing roster
- * Avoids duplicates based on name + voice part
- * Preserves existing member IDs when possible
- */
-function mergeRosters(existing: ChoirRoster, imported: ChoirRoster): ChoirRoster {
-  const mergedMembers = [...existing.members];
-  const existingKeys = new Set(
-    existing.members.map(m => `${m.name.toLowerCase()}:${m.voicePartId}`)
-  );
-  
-  // Add imported members that don't already exist
-  for (const importedMember of imported.members) {
-    const key = `${importedMember.name.toLowerCase()}:${importedMember.voicePartId}`;
-    
-    if (!existingKeys.has(key)) {
-      mergedMembers.push(importedMember);
-      existingKeys.add(key);
-    }
-  }
-  
-  return {
-    members: mergedMembers,
-    version: Math.max(existing.version, imported.version),
-  };
-}
-
-/**
- * Merge imported voice parts configuration with existing configuration
- * Avoids duplicates based on voice part ID
- * Preserves existing voice part properties when IDs match
- */
-function mergeVoicePartsConfigs(
-  existing: VoicePartsConfiguration,
-  imported: VoicePartsConfiguration
-): VoicePartsConfiguration {
-  const mergedParts = [...existing.parts];
-  const existingIds = new Set(existing.parts.map(p => p.id));
-  
-  // Add imported voice parts that don't already exist
-  for (const importedPart of imported.parts) {
-    if (!existingIds.has(importedPart.id)) {
-      // Assign new order at the end
-      mergedParts.push({
-        ...importedPart,
-        order: mergedParts.length,
-      });
-      existingIds.add(importedPart.id);
-    }
-  }
-  
-  return {
-    parts: mergedParts,
-    version: Math.max(existing.version, imported.version),
-  };
-}
+// Merge functions removed - no longer needed without localStorage
 
 export function getMembersBySection(
   members: ChoirMember[],

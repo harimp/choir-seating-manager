@@ -23,7 +23,7 @@ export function loadChoirRoster(): ChoirRoster {
  * Save choir roster (localStorage removed)
  * No-op function to prevent data merging across sessions
  */
-export function saveChoirRoster(_roster: ChoirRoster): void {
+export function saveChoirRoster(): void {
   // No-op: localStorage removed to prevent data merging across sessions
   console.log('saveChoirRoster called (localStorage disabled)');
 }
