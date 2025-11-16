@@ -15,6 +15,7 @@ export interface DataPlaneStackProps extends StackProps {
 
 export class DataPlaneStack extends Stack {
     public readonly sessionTable: dynamodb.Table;
+    public readonly snapshotTable: dynamodb.Table;
     public readonly api: apigateway.RestApi;
     public readonly customDomain: apigateway.DomainName;
 
@@ -43,6 +44,32 @@ export class DataPlaneStack extends Stack {
             projectionType: dynamodb.ProjectionType.ALL,
         });
 
+        // Create DynamoDB table for snapshot management
+        this.snapshotTable = new dynamodb.Table(this, "SnapshotTable", {
+            tableName: "choir-snapshots",
+            partitionKey: {
+                name: "snapshotId",
+                type: dynamodb.AttributeType.STRING,
+            },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            pointInTimeRecovery: true,
+            removalPolicy: RemovalPolicy.RETAIN,
+        });
+
+        // Add GSI for querying snapshots by session code
+        this.snapshotTable.addGlobalSecondaryIndex({
+            indexName: "SessionCodeIndex",
+            partitionKey: {
+                name: "sessionCode",
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: "updatedAt",
+                type: dynamodb.AttributeType.STRING,
+            },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
         // Create single Lambda function for all operations
         const sessionsLambda = new nodejs.NodejsFunction(this, "SessionsFunction", {
             entry: path.join(__dirname, "../../api/src/index.ts"),
@@ -50,6 +77,7 @@ export class DataPlaneStack extends Stack {
             runtime: lambda.Runtime.NODEJS_20_X,
             environment: {
                 TABLE_NAME: this.sessionTable.tableName,
+                SNAPSHOTS_TABLE_NAME: this.snapshotTable.tableName,
             },
             timeout: Duration.seconds(30),
             bundling: {
@@ -65,6 +93,7 @@ export class DataPlaneStack extends Stack {
 
         // Grant DynamoDB permissions to Lambda function
         this.sessionTable.grantReadWriteData(sessionsLambda);
+        this.snapshotTable.grantReadWriteData(sessionsLambda);
 
         // Create API Gateway
         this.api = new apigateway.RestApi(this, "SessionsApi", {
