@@ -38,3 +38,30 @@ export interface CreateSessionRequest {
   sessionName: string;
   choirData: ChoirData;
 }
+
+export interface SnapshotItem {
+  snapshotId: string;
+  sessionId: string;
+  sessionCode: string;
+  snapshotName: string;
+  choirData: ChoirData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSnapshotRequest {
+  snapshotName?: string;
+  choirData: ChoirData;
+}
+
+export interface UpdateSnapshotRequest {
+  snapshotName: string;
+}
+
+export interface SnapshotListItem {
+  snapshotId: string;
+  snapshotName: string;
+  memberCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
