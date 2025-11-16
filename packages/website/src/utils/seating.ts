@@ -248,3 +248,38 @@ export function cleanOrphanedSeatingReferences(
   const rosterIds = new Set(roster.members.map(m => m.id));
   return seating.filter(s => rosterIds.has(s.rosterId));
 }
+
+/**
+ * Normalize seating positions to ensure they are non-negative integers
+ * Sorts members by row and position, then reassigns sequential positions starting from 0
+ */
+export function normalizeSeatingPositions(seating: SeatedMember[]): SeatedMember[] {
+  // Group by row
+  const byRow = new Map<number, SeatedMember[]>();
+  
+  for (const seated of seating) {
+    if (!byRow.has(seated.rowNumber)) {
+      byRow.set(seated.rowNumber, []);
+    }
+    byRow.get(seated.rowNumber)!.push(seated);
+  }
+  
+  // Normalize positions within each row
+  const normalized: SeatedMember[] = [];
+  
+  for (const [rowNumber, members] of byRow.entries()) {
+    // Sort by position (handles both decimals and negatives correctly)
+    const sorted = members.sort((a, b) => a.position - b.position);
+    
+    // Reassign sequential integer positions starting from 0
+    sorted.forEach((member, index) => {
+      normalized.push({
+        ...member,
+        position: index,
+        rowNumber: Math.max(0, Math.floor(rowNumber)), // Ensure row is also non-negative integer
+      });
+    });
+  }
+  
+  return normalized;
+}

@@ -6,6 +6,7 @@ import { ConductorIcon } from './ConductorIcon';
 import { PianoIcon } from './PianoIcon';
 import { getRowFromY } from '../utils/collisionDetection';
 import { calculateMemberDisplayPosition } from '../utils/alignmentCalculations';
+import { normalizeSeatingPositions } from '../utils/seating';
 import './ChoirStageView.scss';
 
 interface ChoirStageViewProps {
@@ -420,15 +421,25 @@ export const ChoirStageView = ({
     // Calculate shadow position value
     let shadowPos: number;
     if (shadowRowMembers.length === 0) {
-      shadowPos = member.position;
+      shadowPos = 0;
     } else if (insertionIndex === 0) {
-      shadowPos = shadowRowMembers[0].position - 1;
+      // Insert at beginning - use position 0 or lower if first member is already at 0
+      const firstPos = shadowRowMembers[0].position;
+      shadowPos = firstPos > 0 ? 0 : Math.floor(firstPos) - 1;
     } else if (insertionIndex === shadowRowMembers.length) {
-      shadowPos = shadowRowMembers[shadowRowMembers.length - 1].position + 1;
+      // Insert at end - use next integer position
+      shadowPos = Math.floor(shadowRowMembers[shadowRowMembers.length - 1].position) + 1;
     } else {
+      // Insert between two members - use the position of the member before
+      // This will be normalized later when positions are recalculated
       const beforePos = shadowRowMembers[insertionIndex - 1].position;
       const afterPos = shadowRowMembers[insertionIndex].position;
-      shadowPos = (beforePos + afterPos) / 2;
+      // Use average but ensure it's between the two positions
+      shadowPos = Math.floor(beforePos) + 1;
+      // If that position is already taken by afterPos, use decimal temporarily
+      if (shadowPos >= afterPos) {
+        shadowPos = (beforePos + afterPos) / 2;
+      }
     }
 
     // Calculate shadow display position
@@ -497,6 +508,26 @@ export const ChoirStageView = ({
       .filter(m => m.id !== currentDragState.member!.id)
       .concat(shadowMember);
 
+    // Convert DisplayMembers to SeatedMembers for normalization
+    const seatingData = updatedMembers.map(m => ({
+      rosterId: m.id,
+      position: m.position,
+      rowNumber: m.rowNumber,
+    }));
+
+    // Normalize positions to ensure they are non-negative integers
+    const normalizedSeating = normalizeSeatingPositions(seatingData);
+
+    // Convert back to DisplayMembers with normalized positions
+    const normalizedMembers = updatedMembers.map(member => {
+      const normalized = normalizedSeating.find(s => s.rosterId === member.id);
+      return normalized ? {
+        ...member,
+        position: normalized.position,
+        rowNumber: normalized.rowNumber,
+      } : member;
+    });
+
     // Clear drag state
     const emptyState = {
       member: null,
@@ -515,8 +546,8 @@ export const ChoirStageView = ({
       setDragState(emptyState);
     });
 
-    // Update seating with the array that matches the drag preview
-    onSeatingUpdate(updatedMembers);
+    // Update seating with normalized positions
+    onSeatingUpdate(normalizedMembers);
   };
 
   const handleMemberClick = (member: DisplayMember) => {

@@ -2,6 +2,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
 import { ChoirData, SessionItem } from '../types';
+import { normalizeSeatingPositions } from '../utils/seating';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -42,11 +43,11 @@ function validateChoirData(choirData: ChoirData): void {
       if (!seated.rosterId || typeof seated.rosterId !== 'string') {
         throw new Error('Invalid seating data: rosterId is required for each seated member');
       }
-      if (typeof seated.position !== 'number' || seated.position < 0) {
-        throw new Error('Invalid seating data: position must be a non-negative number');
+      if (typeof seated.position !== 'number') {
+        throw new Error('Invalid seating data: position must be a number');
       }
-      if (typeof seated.rowNumber !== 'number' || seated.rowNumber < 0) {
-        throw new Error('Invalid seating data: rowNumber must be a non-negative number');
+      if (typeof seated.rowNumber !== 'number') {
+        throw new Error('Invalid seating data: rowNumber must be a number');
       }
     }
   }
@@ -102,6 +103,11 @@ export async function createSession(sessionCode: string, sessionName: string, ch
   // Legacy format: choirData.members contains full member data (for backward compatibility)
   // Note: Voice parts configuration and roster are stored at profile-level, NOT in sessions
   validateChoirData(choirData);
+
+  // Normalize seating positions to ensure they are non-negative integers
+  if (choirData.seating) {
+    choirData.seating = normalizeSeatingPositions(choirData.seating);
+  }
 
   // Check if session with this code already exists using GSI
   const existingResult = await docClient.send(
@@ -171,6 +177,11 @@ export async function updateSession(sessionCode: string, choirData: ChoirData): 
   // New format: choirData.seating contains only references to roster members
   // This keeps session data lightweight and ensures roster is the single source of truth
   validateChoirData(choirData);
+
+  // Normalize seating positions to ensure they are non-negative integers
+  if (choirData.seating) {
+    choirData.seating = normalizeSeatingPositions(choirData.seating);
+  }
 
   // Get existing session by code using GSI
   const existingSession = await getSession(sessionCode);

@@ -3,6 +3,7 @@ import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, QueryCom
 import { randomUUID } from 'crypto';
 import { ChoirData, SnapshotItem, SnapshotListItem } from '../types';
 import { getSession } from './sessions';
+import { normalizeSeatingPositions } from '../utils/seating';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -71,11 +72,11 @@ function validateChoirData(choirData: ChoirData): void {
       if (!seated.rosterId || typeof seated.rosterId !== 'string') {
         throw new Error('Invalid seating data: rosterId is required for each seated member');
       }
-      if (typeof seated.position !== 'number' || seated.position < 0) {
-        throw new Error('Invalid seating data: position must be a non-negative number');
+      if (typeof seated.position !== 'number') {
+        throw new Error('Invalid seating data: position must be a number');
       }
-      if (typeof seated.rowNumber !== 'number' || seated.rowNumber < 0) {
-        throw new Error('Invalid seating data: rowNumber must be a non-negative number');
+      if (typeof seated.rowNumber !== 'number') {
+        throw new Error('Invalid seating data: rowNumber must be a number');
       }
     }
   }
@@ -141,6 +142,11 @@ export async function createSnapshot(
   
   // Validate choir data
   validateChoirData(choirData);
+  
+  // Normalize seating positions to ensure they are non-negative integers
+  if (choirData.seating) {
+    choirData.seating = normalizeSeatingPositions(choirData.seating);
+  }
   
   // Generate or validate snapshot name
   const finalSnapshotName = snapshotName || generateDefaultSnapshotName();
