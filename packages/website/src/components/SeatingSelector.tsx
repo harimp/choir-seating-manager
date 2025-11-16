@@ -136,6 +136,15 @@ export const SeatingSelector = ({
         </div>
       </div>
 
+      <div className="selector-actions">
+        <button className="btn btn-primary" onClick={handleApply}>
+          Apply Changes
+        </button>
+        <button className="btn btn-secondary" onClick={handleCancel}>
+          Cancel
+        </button>
+      </div>
+
       <div className="selector-controls">
         <div className="filter-controls">
           <label htmlFor="voice-part-filter">Filter by Voice Part:</label>
@@ -223,15 +232,6 @@ export const SeatingSelector = ({
               : 'No members in this voice part.'}
           </div>
         )}
-      </div>
-
-      <div className="selector-actions">
-        <button className="btn btn-primary" onClick={handleApply}>
-          Apply Changes
-        </button>
-        <button className="btn btn-secondary" onClick={handleCancel}>
-          Cancel
-        </button>
       </div>
     </div>
   );

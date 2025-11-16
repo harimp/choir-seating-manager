@@ -101,6 +101,10 @@ export const ChoirRosterManager = ({
   const handleAddMember = () => {
     const trimmedName = newMemberName.trim();
 
+    if (trimmedName.length === 0) {
+      return; // Just ignore empty submissions
+    }
+
     // Validate member name
     const nameValidation = validateMemberName(trimmedName);
     if (!nameValidation.isValid) {
@@ -122,10 +126,8 @@ export const ChoirRosterManager = ({
     );
     onRosterChange(updatedRoster);
 
-    // Reset form
+    // Clear the input but keep the form open and focused
     setNewMemberName('');
-    setNewMemberVoicePart(voiceParts.parts[0]?.id || '');
-    setShowAddForm(false);
     setError(null);
   };
 
@@ -227,21 +229,6 @@ export const ChoirRosterManager = ({
 
       {showAddForm && (
         <div className="add-member-form">
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Member name"
-            value={newMemberName}
-            onChange={(e) => setNewMemberName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleAddMember();
-              } else if (e.key === 'Escape') {
-                handleCancelAdd();
-              }
-            }}
-            autoFocus
-          />
           <select
             className="form-select"
             value={newMemberVoicePart}
@@ -253,12 +240,25 @@ export const ChoirRosterManager = ({
               </option>
             ))}
           </select>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Enter member name and press Enter"
+            value={newMemberName}
+            onChange={(e) => setNewMemberName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddMember();
+              } else if (e.key === 'Escape') {
+                handleCancelAdd();
+              }
+            }}
+            autoFocus
+          />
           <div className="form-actions">
-            <button className="btn btn-primary btn-sm" onClick={handleAddMember}>
-              Add
-            </button>
             <button className="btn btn-secondary btn-sm" onClick={handleCancelAdd}>
-              Cancel
+              Done
             </button>
           </div>
         </div>

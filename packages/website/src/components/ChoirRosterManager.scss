@@ -52,7 +52,8 @@
     gap: 10px;
 
     .form-input,
-    .form-select {
+    .form-select,
+    .form-textarea {
       width: 100%;
       padding: 8px 12px;
       border: 2px solid $primary-color;
@@ -68,6 +69,17 @@
     .form-select {
       cursor: pointer;
       background-color: white;
+    }
+
+    .form-textarea {
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.5;
+
+      &::placeholder {
+        color: #999;
+      }
     }
 
     .form-actions {
