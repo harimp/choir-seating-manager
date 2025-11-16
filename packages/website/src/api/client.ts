@@ -1,4 +1,12 @@
-import { ChoirData, SessionItem, CreateSessionRequest } from '../types';
+import { 
+  ChoirData, 
+  SessionItem, 
+  CreateSessionRequest,
+  SnapshotItem,
+  CreateSnapshotRequest,
+  UpdateSnapshotRequest,
+  SnapshotListItem
+} from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.choir.harimp.com';
 
@@ -92,6 +100,74 @@ export async function updateSession(
 export async function deleteSession(sessionCode: string): Promise<{ message: string; sessionCode: string; sessionId: string }> {
   return fetchApi<{ message: string; sessionCode: string; sessionId: string }>(
     `/sessions/${encodeURIComponent(sessionCode)}`,
+    {
+      method: 'DELETE',
+    }
+  );
+}
+
+// Snapshot API functions
+
+export async function createSnapshot(
+  sessionCode: string,
+  snapshotName: string | undefined,
+  choirData: ChoirData
+): Promise<SnapshotItem> {
+  const request: CreateSnapshotRequest = {
+    snapshotName,
+    choirData,
+  };
+
+  return fetchApi<SnapshotItem>(
+    `/sessions/${encodeURIComponent(sessionCode)}/snapshots`,
+    {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }
+  );
+}
+
+export async function listSnapshots(
+  sessionCode: string
+): Promise<{ snapshots: SnapshotListItem[] }> {
+  return fetchApi<{ snapshots: SnapshotListItem[] }>(
+    `/sessions/${encodeURIComponent(sessionCode)}/snapshots`
+  );
+}
+
+export async function getSnapshot(
+  sessionCode: string,
+  snapshotId: string
+): Promise<SnapshotItem> {
+  return fetchApi<SnapshotItem>(
+    `/sessions/${encodeURIComponent(sessionCode)}/snapshots/${encodeURIComponent(snapshotId)}`
+  );
+}
+
+export async function updateSnapshotName(
+  sessionCode: string,
+  snapshotId: string,
+  snapshotName: string
+): Promise<SnapshotItem> {
+  const request: UpdateSnapshotRequest = {
+    snapshotName,
+  };
+
+  return fetchApi<SnapshotItem>(
+    `/sessions/${encodeURIComponent(sessionCode)}/snapshots/${encodeURIComponent(snapshotId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(request),
+    }
+  );
+}
+
+export async function deleteSnapshot(
+  sessionCode: string,
+  snapshotId: string
+): Promise<{ message: string; snapshotId: string }> {
+  return fetchApi<{ message: string; snapshotId: string }>(
+    `/sessions/${encodeURIComponent(sessionCode)}/snapshots/${encodeURIComponent(snapshotId)}`,
     {
       method: 'DELETE',
     }

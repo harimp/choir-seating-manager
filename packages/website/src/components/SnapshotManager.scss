@@ -1,0 +1,390 @@
+@use '../styles/variables.scss' as *;
+
+.snapshot-manager {
+  margin-top: $spacing-lg;
+
+  .snapshot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: $text-dark;
+    }
+
+    .btn {
+      padding: $spacing-sm $spacing-md;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+  }
+
+  // Messages
+  .success-message,
+  .error-message,
+  .loading-message {
+    padding: $spacing-md;
+    border-radius: $border-radius-md;
+    margin-bottom: $spacing-md;
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+  }
+
+  .success-message {
+    background-color: rgba($success-color, 0.1);
+    color: darken($success-color, 10%);
+    border: 1px solid rgba($success-color, 0.3);
+  }
+
+  .error-message {
+    background-color: rgba($danger-color, 0.1);
+    color: darken($danger-color, 10%);
+    border: 1px solid rgba($danger-color, 0.3);
+  }
+
+  .loading-message {
+    background-color: rgba($info-color, 0.1);
+    color: darken($info-color, 10%);
+    border: 1px solid rgba($info-color, 0.3);
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    &::before {
+      content: '';
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba($info-color, 0.3);
+      border-top-color: $info-color;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  // Snapshot List
+  .snapshot-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: $spacing-xs;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $bg-light;
+      border-radius: $border-radius-sm;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: $border-radius-sm;
+
+      &:hover {
+        background: #aaa;
+      }
+    }
+
+    .empty-message {
+      text-align: center;
+      color: $text-muted;
+      font-size: 14px;
+      font-style: italic;
+      padding: $spacing-xl;
+    }
+  }
+
+  .snapshot-item {
+    display: flex;
+    flex-direction: column;
+    padding: $spacing-md;
+    background-color: $bg-light;
+    border-radius: $border-radius-md;
+    border: 1px solid $border-color;
+    transition: all $transition-fast;
+    gap: $spacing-md;
+
+    &:hover {
+      background-color: darken($bg-light, 3%);
+      border-color: darken($border-color, 10%);
+      box-shadow: $shadow-sm;
+    }
+
+    .snapshot-info {
+      .snapshot-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: $text-dark;
+        margin-bottom: $spacing-xs;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .snapshot-meta {
+        font-size: 12px;
+        color: $text-muted;
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+      }
+    }
+
+    .snapshot-actions {
+      display: flex;
+      gap: $spacing-xs;
+
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: $border-radius-sm;
+        white-space: nowrap;
+        flex: 1;
+      }
+    }
+  }
+
+  // Modal/Dialog Styles
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    animation: modalSlideIn 0.3s ease;
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -45%);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .modal-content {
+    background-color: white;
+    border-radius: $border-radius-lg;
+    padding: $spacing-xl;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    min-width: 400px;
+    max-width: 90vw;
+
+    h4 {
+      margin: 0 0 $spacing-lg 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: $text-dark;
+    }
+
+    p {
+      margin: 0 0 $spacing-lg 0;
+      font-size: 14px;
+      color: $text-light;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: $spacing-lg;
+
+      label {
+        display: block;
+        margin-bottom: $spacing-sm;
+        font-weight: 500;
+        font-size: 14px;
+        color: $text-dark;
+      }
+
+      input {
+        width: 100%;
+        padding: $spacing-sm $spacing-md;
+        border: 2px solid $border-color;
+        border-radius: $border-radius-md;
+        font-size: 14px;
+        transition: border-color $transition-fast;
+
+        &:focus {
+          border-color: $primary-color;
+          outline: none;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        }
+
+        &::placeholder {
+          color: $text-muted;
+        }
+      }
+
+      small {
+        display: block;
+        margin-top: $spacing-xs;
+        font-size: 12px;
+        color: $text-muted;
+      }
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: $spacing-sm;
+      margin-top: $spacing-lg;
+
+      .btn {
+        padding: $spacing-sm $spacing-lg;
+        font-size: 14px;
+        min-width: 80px;
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .snapshot-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-md;
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    .snapshot-item {
+      flex-direction: column;
+      align-items: stretch;
+
+      .snapshot-info {
+        margin-bottom: $spacing-sm;
+      }
+
+      .snapshot-actions {
+        justify-content: stretch;
+
+        .btn-small {
+          flex: 1;
+        }
+      }
+    }
+
+    .modal-content {
+      min-width: 300px;
+      max-width: 85vw;
+      padding: $spacing-lg;
+
+      h4 {
+        font-size: 18px;
+      }
+
+      .modal-actions {
+        flex-direction: column-reverse;
+
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .snapshot-header {
+      h3 {
+        font-size: 16px;
+      }
+    }
+
+    .snapshot-item {
+      padding: $spacing-sm;
+
+      .snapshot-info {
+        .snapshot-name {
+          font-size: 14px;
+        }
+
+        .snapshot-meta {
+          font-size: 11px;
+        }
+      }
+
+      .snapshot-actions {
+        flex-wrap: wrap;
+
+        .btn-small {
+          font-size: 11px;
+          padding: 5px 10px;
+        }
+      }
+    }
+
+    .modal-content {
+      min-width: 280px;
+      padding: $spacing-md;
+
+      h4 {
+        font-size: 16px;
+        margin-bottom: $spacing-md;
+      }
+
+      p {
+        font-size: 13px;
+      }
+
+      .form-group {
+        input {
+          font-size: 13px;
+        }
+
+        small {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+}

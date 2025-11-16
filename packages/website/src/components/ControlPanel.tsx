@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChoirMember, VoiceSection, StageSettings, AlignmentMode, PianoPosition } from '../types';
+import { ChoirMember, VoiceSection, StageSettings, AlignmentMode, PianoPosition, ChoirData } from '../types';
+import { SnapshotManager } from './SnapshotManager';
 import './ControlPanel.scss';
 
 interface ControlPanelProps {
@@ -12,6 +13,8 @@ interface ControlPanelProps {
   onRemoveMember: (id: string) => void;
   onExport: () => void;
   onImport: (file: File) => void;
+  sessionCode?: string;
+  onRestoreSnapshot?: (choirData: ChoirData) => void;
 }
 
 export const ControlPanel = ({
@@ -24,6 +27,8 @@ export const ControlPanel = ({
   onRemoveMember,
   onExport,
   onImport,
+  sessionCode,
+  onRestoreSnapshot,
 }: ControlPanelProps) => {
   const [memberName, setMemberName] = useState('');
   const [selectedVoice, setSelectedVoice] = useState<VoiceSection>('Soprano');
@@ -239,6 +244,21 @@ export const ControlPanel = ({
               </button>
             </div>
           </section>
+
+          {/* Snapshots */}
+          {sessionCode && onRestoreSnapshot && (
+            <section className="panel-section">
+              <SnapshotManager
+                sessionCode={sessionCode}
+                currentChoirData={{
+                  members,
+                  settings,
+                  lastUpdated: new Date().toISOString(),
+                }}
+                onRestore={onRestoreSnapshot}
+              />
+            </section>
+          )}
         </div>
       </div>
     </>

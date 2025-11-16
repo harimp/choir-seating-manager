@@ -218,6 +218,11 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     }
   };
 
+  const handleRestoreSnapshot = (choirData: { members: ChoirMember[]; settings: StageSettings }) => {
+    setMembers(choirData.members);
+    setSettings(choirData.settings);
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -272,6 +277,8 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
         onRemoveMember={handleRemoveMember}
         onExport={handleExport}
         onImport={handleImport}
+        sessionCode={sessionCode}
+        onRestoreSnapshot={handleRestoreSnapshot}
       />
       
       <ChoirStageView
