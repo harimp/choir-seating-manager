@@ -1,11 +1,14 @@
 import { 
-  ChoirData, 
   SessionItem, 
   CreateSessionRequest,
   SnapshotItem,
   CreateSnapshotRequest,
   UpdateSnapshotRequest,
-  SnapshotListItem
+  SnapshotListItem,
+  RosterMember,
+  VoicePartsConfiguration,
+  SeatedMember,
+  StageSettings
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.choir.harimp.com';
@@ -71,12 +74,18 @@ export async function getSession(sessionCode: string): Promise<SessionItem> {
 export async function createSession(
   sessionCode: string,
   sessionName: string,
-  choirData: ChoirData
+  roster: RosterMember[],
+  voiceParts: VoicePartsConfiguration,
+  seating: SeatedMember[],
+  settings: StageSettings
 ): Promise<SessionItem> {
   const request: CreateSessionRequest = {
     sessionCode,
     sessionName,
-    choirData,
+    roster,
+    voiceParts,
+    seating,
+    settings,
   };
 
   return fetchApi<SessionItem>('/sessions', {
@@ -87,9 +96,19 @@ export async function createSession(
 
 export async function updateSession(
   sessionCode: string,
-  choirData: ChoirData
+  roster: RosterMember[],
+  voiceParts: VoicePartsConfiguration,
+  seating: SeatedMember[],
+  settings: StageSettings
 ): Promise<SessionItem> {
-  const request = { choirData };
+  const request: CreateSessionRequest = {
+    sessionCode,
+    sessionName: '', // Not used in update
+    roster,
+    voiceParts,
+    seating,
+    settings,
+  };
 
   return fetchApi<SessionItem>(`/sessions/${encodeURIComponent(sessionCode)}`, {
     method: 'PUT',
@@ -111,11 +130,13 @@ export async function deleteSession(sessionCode: string): Promise<{ message: str
 export async function createSnapshot(
   sessionCode: string,
   snapshotName: string | undefined,
-  choirData: ChoirData
+  seating: SeatedMember[],
+  settings: StageSettings
 ): Promise<SnapshotItem> {
   const request: CreateSnapshotRequest = {
     snapshotName,
-    choirData,
+    seating,
+    settings,
   };
 
   return fetchApi<SnapshotItem>(

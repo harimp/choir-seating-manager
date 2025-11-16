@@ -28,7 +28,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         return errorResponse(400, 'Session name is required');
       }
 
-      const result = await createSession(request.sessionCode, request.sessionName, request.choirData);
+      const result = await createSession(
+        request.sessionCode,
+        request.sessionName,
+        request.roster,
+        request.voiceParts,
+        request.seating,
+        request.settings
+      );
       return successResponse(201, result);
     }
 
@@ -61,8 +68,49 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         return errorResponse(400, 'Request body is required');
       }
 
-      const request: CreateSessionRequest = JSON.parse(event.body);
-      const result = await updateSession(sessionCode, request.choirData);
+      let request: CreateSessionRequest;
+      
+      try {
+        request = JSON.parse(event.body);
+      } catch (parseError) {
+        console.error('Failed to parse request body:', parseError);
+        return errorResponse(400, 'Invalid JSON in request body');
+      }
+      
+      console.log('Update session request:', {
+        sessionCode,
+        hasRoster: !!request.roster,
+        rosterLength: request.roster?.length,
+        hasVoiceParts: !!request.voiceParts,
+        hasSeating: !!request.seating,
+        seatingLength: request.seating?.length,
+        hasSettings: !!request.settings,
+        settings: request.settings,
+      });
+      
+      if (!request.roster) {
+        return errorResponse(400, 'Roster is required');
+      }
+      
+      if (!request.voiceParts) {
+        return errorResponse(400, 'Voice parts configuration is required');
+      }
+      
+      if (request.seating === undefined) {
+        return errorResponse(400, 'Seating is required');
+      }
+      
+      if (!request.settings) {
+        return errorResponse(400, 'Settings are required');
+      }
+      
+      const result = await updateSession(
+        sessionCode,
+        request.roster,
+        request.voiceParts,
+        request.seating,
+        request.settings
+      );
       return successResponse(200, result);
     }
 
@@ -92,11 +140,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
       const request: CreateSnapshotRequest = JSON.parse(event.body);
       
-      if (!request.choirData) {
-        return errorResponse(400, 'Choir data is required');
+      if (!request.seating) {
+        return errorResponse(400, 'Seating data is required');
       }
 
-      const result = await createSnapshot(sessionCode, request.snapshotName, request.choirData);
+      if (!request.settings) {
+        return errorResponse(400, 'Settings are required');
+      }
+
+      const result = await createSnapshot(sessionCode, request.snapshotName, request.seating, request.settings);
       return successResponse(201, result);
     }
 

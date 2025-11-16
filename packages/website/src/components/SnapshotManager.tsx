@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChoirData, SnapshotListItem } from '../types';
+import { SeatedMember, StageSettings, SnapshotListItem } from '../types';
 import { 
   createSnapshot, 
   listSnapshots, 
@@ -12,13 +12,15 @@ import './SnapshotManager.scss';
 
 interface SnapshotManagerProps {
   sessionCode: string;
-  currentChoirData: ChoirData;
-  onRestore: (choirData: ChoirData) => void | Promise<void>;
+  currentSeating: SeatedMember[];
+  currentSettings: StageSettings;
+  onRestore: (seating: SeatedMember[], settings: StageSettings) => void | Promise<void>;
 }
 
 export const SnapshotManager = ({
   sessionCode,
-  currentChoirData,
+  currentSeating,
+  currentSettings,
   onRestore,
 }: SnapshotManagerProps) => {
   const [snapshots, setSnapshots] = useState<SnapshotListItem[]>([]);
@@ -82,7 +84,8 @@ export const SnapshotManager = ({
       await createSnapshot(
         sessionCode,
         snapshotName.trim() || undefined,
-        currentChoirData
+        currentSeating,
+        currentSettings
       );
       setSuccessMessage('Snapshot saved successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -125,7 +128,7 @@ export const SnapshotManager = ({
     setError(null);
     try {
       const snapshot = await getSnapshot(sessionCode, snapshotToRestore);
-      await onRestore(snapshot.choirData);
+      await onRestore(snapshot.seating, snapshot.settings);
       setSuccessMessage('Snapshot restored successfully!');
       setTimeout(() => setSuccessMessage(null), 3000);
       setShowRestoreDialog(false);

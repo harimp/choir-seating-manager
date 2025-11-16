@@ -12,11 +12,9 @@ import {
   RosterMember,
   SeatedMember,
   DisplayMember,
-  ChoirData,
 } from './types';
 import {
   loadChoirData,
-  importChoirData,
   MigrationResult,
 } from './utils/storage';
 import {
@@ -33,7 +31,6 @@ import {
   joinRosterAndSeating,
   removeFromSeating,
   cleanOrphanedSeatingReferences,
-  migrateLegacyMembers,
 } from './utils/seating';
 
 import { getSession, updateSession, ApiError } from './api/client';
@@ -129,64 +126,108 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
         setError(null);
         const session = await getSession(sessionCode);
         
-        // Handle seating data from session
-        if (session.choirData.seating) {
-          // New format: session contains seating references
-          // Clean orphaned seating references (members that don't exist in current roster)
-          const cleanedSeating = cleanOrphanedSeatingReferences(session.choirData.seating, loadedRoster);
+        // Check if session has new schema (roster, voiceParts, seating, settings)
+        // or old schema (choirData with members/seating)
+        if (session.roster && session.voiceParts && session.seating !== undefined && session.settings) {
+          // New schema - load directly from session
+          const sessionRoster: ChoirRoster = {
+            members: session.roster,
+            version: 1,
+          };
+          setRoster(sessionRoster);
+          setVoicePartsConfig(session.voiceParts);
           
-          // Check if any references were orphaned and notify user
-          const orphanedCount = session.choirData.seating.length - cleanedSeating.length;
-          if (orphanedCount > 0) {
-            console.warn(`Removed ${orphanedCount} orphaned seating reference(s) from session`);
-            // Show a subtle notification to user
+          // Check for orphaned seating references (members that don't exist in session roster)
+          const rosterIds = new Set(session.roster.map(m => m.id));
+          const orphanedSeating = session.seating.filter(s => !rosterIds.has(s.rosterId));
+          
+          if (orphanedSeating.length > 0) {
+            console.warn(`Found ${orphanedSeating.length} orphaned seating reference(s) in session`);
+            // Show toaster error as requested
             setTimeout(() => {
-              alert(`Note: ${orphanedCount} member(s) from this session no longer exist in your roster and were not loaded.`);
+              alert(`Warning: ${orphanedSeating.length} member(s) in the seating arrangement no longer exist in the roster and were ignored.`);
             }, 500);
+            
+            // Filter out orphaned references
+            const cleanedSeating = session.seating.filter(s => rosterIds.has(s.rosterId));
+            setSeating(cleanedSeating);
+          } else {
+            setSeating(session.seating);
           }
           
-          setSeating(cleanedSeating);
-        } else if (session.choirData.members) {
-          // Legacy format - migrate to roster + seating
-          console.log('Session has legacy format, migrating to roster + seating...');
+          setSettings(session.settings);
+        } else if ((session as any).choirData) {
+          // Old schema - migrate to new format
+          console.log('Migrating session from old schema to new schema...');
+          const legacySession = session as any;
+          const choirData = legacySession.choirData;
           
-          const existingMemberCount = loadedRoster.members.length;
+          // Convert legacy members to roster + seating
+          let migratedRoster: RosterMember[] = [];
+          let migratedSeating: SeatedMember[] = [];
           
-          // Migrate legacy members to roster + seating
-          const { roster: updatedRoster, seating: migratedSeating } = migrateLegacyMembers(
-            session.choirData.members,
-            loadedRoster
-          );
+          if (choirData.members) {
+            // Legacy format with full member data
+            migratedRoster = choirData.members.map((member: any) => ({
+              id: member.id,
+              name: member.name,
+              voicePartId: member.voiceSection.toLowerCase(), // Convert "Soprano" -> "soprano"
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }));
+            
+            migratedSeating = choirData.members.map((member: any) => ({
+              rosterId: member.id,
+              position: member.position,
+              rowNumber: member.rowNumber,
+            }));
+          } else if (choirData.seating) {
+            // Already has seating references but no roster - use local roster
+            migratedRoster = loadedRoster.members;
+            migratedSeating = choirData.seating;
+          }
           
-          // Calculate migration stats
-          const newMemberCount = updatedRoster.members.length - existingMemberCount;
-          const duplicatesFound = session.choirData.members.length - newMemberCount;
+          // Use default voice parts or loaded config
+          const migratedVoiceParts = config;
+          const migratedSettings = choirData.settings;
           
-          // Save updated roster
-          saveChoirRoster();
-          setRoster(updatedRoster);
+          // Save migrated session back to database
+          try {
+            await updateSession(
+              sessionCode,
+              migratedRoster,
+              migratedVoiceParts,
+              migratedSeating,
+              migratedSettings
+            );
+            console.log('Session migrated successfully');
+          } catch (migrationErr) {
+            console.error('Error saving migrated session:', migrationErr);
+            // Continue anyway with local state
+          }
           
-          // Set migrated seating
+          // Set state with migrated data
+          const sessionRoster: ChoirRoster = {
+            members: migratedRoster,
+            version: 1,
+          };
+          setRoster(sessionRoster);
+          setVoicePartsConfig(migratedVoiceParts);
           setSeating(migratedSeating);
+          setSettings(migratedSettings);
           
           // Show migration notification
-          setMigrationResult({
-            wasMigrated: true,
-            rosterMemberCount: updatedRoster.members.length,
-            seatedMemberCount: migratedSeating.length,
-            duplicatesFound,
-          });
-          setShowMigrationNotification(true);
-          
-          console.log(`Session migration complete: ${updatedRoster.members.length} roster members, ${migratedSeating.length} seated`);
+          setTimeout(() => {
+            alert('Session has been automatically upgraded to the new format.');
+          }, 500);
         } else {
-          setSeating([]);
+          // Unknown format
+          console.error('Session has unknown format');
+          setError('This session has an unknown format. Please create a new session.');
+          setIsLoading(false);
+          isInitialLoadRef.current = false;
+          return;
         }
-        
-        setSettings(session.choirData.settings);
-        
-        // Voice parts configuration is always loaded from profile-level storage
-        // NOT from session data - this ensures consistency across all sessions
         setIsLoading(false);
         isInitialLoadRef.current = false;
       } catch (err) {
@@ -243,14 +284,24 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     // Schedule save to API
     saveTimeoutRef.current = window.setTimeout(async () => {
       try {
-        // Save session with seating references only (not full member data)
-        // Voice parts configuration is NOT saved to session (it's profile-level)
-        // Roster is NOT saved to session (it's profile-level)
-        await updateSession(sessionCode, {
-          seating, // Only seating references (rosterId, position, rowNumber)
-          settings,
-          lastUpdated: new Date().toISOString(),
-        });
+        // Save session with roster, voice parts, seating, and settings
+        if (!roster || !voicePartsConfig || !settings) {
+          console.error('Cannot save: roster, voice parts config, or settings is missing', {
+            hasRoster: !!roster,
+            hasVoiceParts: !!voicePartsConfig,
+            hasSettings: !!settings,
+          });
+          setSaveStatus('error');
+          return;
+        }
+        
+        await updateSession(
+          sessionCode,
+          roster.members,
+          voicePartsConfig,
+          seating,
+          settings
+        );
         setSaveStatus('saved');
         
         // Reset to idle after 2 seconds
@@ -263,7 +314,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
         setTimeout(() => setSaveStatus('idle'), 5000);
       }
     }, 2000);
-  }, [sessionCode, seating, settings]);
+  }, [sessionCode, seating, settings, roster, voicePartsConfig]);
 
   // Trigger auto-save when seating or settings change
   useEffect(() => {
@@ -361,100 +412,28 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     setSeating(updatedSeating);
   };
 
-  const handleImport = async (file: File) => {
-    try {
-      const { data, migration, hasOrphanedMembers } = await importChoirData(file);
+  const handleRestoreSnapshot = async (seating: SeatedMember[], settings: StageSettings) => {
+    // Check for orphaned seating references (members that don't exist in session roster)
+    if (roster) {
+      const rosterIds = new Set(roster.members.map(m => m.id));
+      const orphanedSeating = seating.filter(s => !rosterIds.has(s.rosterId));
       
-      // Show migration notification if data was migrated
-      if (migration.wasMigrated) {
-        setMigrationResult(migration);
-        setShowMigrationNotification(true);
-      }
-      
-      // Reload voice parts config (import may have updated it)
-      const updatedConfig = loadVoicePartsConfig();
-      setVoicePartsConfig(updatedConfig);
-      
-      // Reload roster (import may have updated it)
-      const updatedRoster = loadChoirRoster();
-      setRoster(updatedRoster);
-      
-      // Handle seating data
-      if (data.seating) {
-        const cleanedSeating = cleanOrphanedSeatingReferences(data.seating, updatedRoster);
+      if (orphanedSeating.length > 0) {
+        console.warn(`Found ${orphanedSeating.length} orphaned seating reference(s) during snapshot restore`);
+        alert(`Warning: ${orphanedSeating.length} member(s) from this snapshot no longer exist in the roster and were ignored.`);
+        
+        // Filter out orphaned references
+        const cleanedSeating = seating.filter(s => rosterIds.has(s.rosterId));
         setSeating(cleanedSeating);
       } else {
-        setSeating([]);
+        setSeating(seating);
       }
-      
-      setSettings(data.settings);
-      
-      // Check for orphaned members after import
-      const orphaned = findOrphanedMembers(updatedRoster, updatedConfig);
-      if (orphaned.length > 0 || hasOrphanedMembers) {
-        setOrphanedMembers(orphaned);
-        setShowOrphanedDialog(true);
-      }
-      
-      if (!migration.wasMigrated && !hasOrphanedMembers) {
-        alert('Data imported successfully!');
-      } else if (!migration.wasMigrated && hasOrphanedMembers) {
-        alert('Data imported successfully! Please reassign members with invalid voice parts.');
-      }
-    } catch (error) {
-      alert('Error importing data. Please check the file format.');
-      console.error(error);
-    }
-  };
-
-  const handleRestoreSnapshot = async (choirData: ChoirData) => {
-    // Handle both legacy and new format snapshots
-    if (choirData.seating) {
-      // New format: snapshot contains seating references
-      if (roster) {
-        // Clean orphaned seating references (members that no longer exist in roster)
-        const cleanedSeating = cleanOrphanedSeatingReferences(choirData.seating, roster);
-        
-        // Check if any references were orphaned
-        const orphanedCount = choirData.seating.length - cleanedSeating.length;
-        if (orphanedCount > 0) {
-          console.warn(`Removed ${orphanedCount} orphaned seating reference(s) during snapshot restore`);
-          alert(`Note: ${orphanedCount} member(s) from this snapshot no longer exist in your roster and were not restored.`);
-        }
-        
-        setSeating(cleanedSeating);
-      }
-    } else if (choirData.members) {
-      // Legacy format: snapshot contains full member data
-      console.warn('Restoring legacy format snapshot - migrating to new format');
-      
-      // Create a temporary file blob for import
-      const legacyData = {
-        members: choirData.members,
-        settings: choirData.settings,
-        lastUpdated: choirData.lastUpdated || new Date().toISOString(),
-      };
-      
-      const blob = new Blob([JSON.stringify(legacyData)], { type: 'application/json' });
-      const file = new File([blob], 'snapshot.json', { type: 'application/json' });
-      
-      // Use the existing import handler which handles migration
-      await handleImport(file);
-      
-      // Settings are already set by handleImport, so we're done
-      return;
     } else {
-      // Empty snapshot or invalid format
-      console.warn('Snapshot has no seating or members data');
-      setSeating([]);
+      setSeating(seating);
     }
     
-    // Always restore settings from snapshot
-    setSettings(choirData.settings);
-    
-    // Voice parts configuration is NOT restored from snapshot
-    // It always comes from profile-level storage
-    // This ensures consistency across all sessions and snapshots
+    // Restore settings from snapshot
+    setSettings(settings);
   };
 
   // Orphaned members dialog handlers

@@ -85,7 +85,21 @@ export interface ChoirData {
   lastUpdated: string;
 }
 
+// Session-level data (includes roster and active seating)
 export interface SessionItem {
+  sessionId: string;
+  sessionCode: string;
+  sessionName: string;
+  roster: RosterMember[];           // Session-level roster
+  voiceParts: VoicePartsConfiguration; // Session-level voice parts config
+  seating: SeatedMember[];          // Active seating arrangement
+  settings: StageSettings;          // Stage settings
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Legacy ChoirData format for backward compatibility
+export interface LegacySessionItem {
   sessionId: string;
   sessionCode: string;
   sessionName: string;
@@ -97,22 +111,28 @@ export interface SessionItem {
 export interface CreateSessionRequest {
   sessionCode: string;
   sessionName: string;
-  choirData: ChoirData;
+  roster: RosterMember[];
+  voiceParts: VoicePartsConfiguration;
+  seating: SeatedMember[];
+  settings: StageSettings;
 }
 
+// Snapshot-level data (only seating references and settings)
 export interface SnapshotItem {
   snapshotId: string;
   sessionId: string;
   sessionCode: string;
   snapshotName: string;
-  choirData: ChoirData;
+  seating: SeatedMember[];          // Snapshot seating arrangement
+  settings: StageSettings;          // Snapshot settings
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateSnapshotRequest {
   snapshotName?: string;
-  choirData: ChoirData;
+  seating: SeatedMember[];
+  settings: StageSettings;
 }
 
 export interface UpdateSnapshotRequest {

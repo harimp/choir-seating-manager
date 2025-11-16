@@ -3,7 +3,6 @@ import {
   StageSettings,
   AlignmentMode,
   PianoPosition,
-  ChoirData,
   VoicePartsConfiguration,
   ChoirRoster,
   SeatedMember,
@@ -29,7 +28,7 @@ interface ControlPanelProps {
   displayMembers: DisplayMember[];
   onRemoveMemberFromSeating: (rosterId: string) => void;
   sessionCode?: string;
-  onRestoreSnapshot?: (choirData: ChoirData) => void;
+  onRestoreSnapshot?: (seating: SeatedMember[], settings: StageSettings) => void;
 }
 
 export const ControlPanel = ({
@@ -261,11 +260,8 @@ export const ControlPanel = ({
                     <section className="panel-section">
                       <SnapshotManager
                         sessionCode={sessionCode}
-                        currentChoirData={{
-                          seating,
-                          settings,
-                          lastUpdated: new Date().toISOString(),
-                        }}
+                        currentSeating={seating}
+                        currentSettings={settings}
                         onRestore={onRestoreSnapshot}
                       />
                     </section>

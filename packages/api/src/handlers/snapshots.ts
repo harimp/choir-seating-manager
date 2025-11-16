@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
-import { ChoirData, SnapshotItem, SnapshotListItem } from '../types';
+import { SnapshotItem, SnapshotListItem, SeatedMember, StageSettings } from '../types';
 import { getSession } from './sessions';
 import { normalizeSeatingPositions } from '../utils/seating';
 
@@ -38,101 +38,58 @@ function validateSnapshotName(name: string): void {
 }
 
 /**
- * Validate choir data structure - supports both legacy and new formats
+ * Validate seating arrangement
  */
-function validateChoirData(choirData: ChoirData): void {
-  if (!choirData.settings) {
-    throw new Error('Invalid choir data: settings are required');
+function validateSeating(seating: SeatedMember[]): void {
+  if (!Array.isArray(seating)) {
+    throw new Error('Seating must be an array');
   }
 
-  // Validate settings structure
-  if (typeof choirData.settings.numberOfRows !== 'number' || choirData.settings.numberOfRows < 1) {
-    throw new Error('Invalid settings: numberOfRows must be a positive number');
-  }
-
-  if (!['balanced', 'grid'].includes(choirData.settings.alignmentMode)) {
-    throw new Error('Invalid settings: alignmentMode must be "balanced" or "grid"');
-  }
-
-  if (!['left', 'right'].includes(choirData.settings.pianoPosition)) {
-    throw new Error('Invalid settings: pianoPosition must be "left" or "right"');
-  }
-
-  // Check if data has either legacy format (members) or new format (seating)
-  const hasLegacyFormat = choirData.members && Array.isArray(choirData.members);
-  const hasNewFormat = choirData.seating && Array.isArray(choirData.seating);
-
-  if (!hasLegacyFormat && !hasNewFormat) {
-    throw new Error('Invalid choir data: either members (legacy) or seating (new format) is required');
-  }
-
-  // Validate seating references if present (new format)
-  if (hasNewFormat && choirData.seating) {
-    for (const seated of choirData.seating) {
-      if (!seated.rosterId || typeof seated.rosterId !== 'string') {
-        throw new Error('Invalid seating data: rosterId is required for each seated member');
-      }
-      if (typeof seated.position !== 'number') {
-        throw new Error('Invalid seating data: position must be a number');
-      }
-      if (typeof seated.rowNumber !== 'number') {
-        throw new Error('Invalid seating data: rowNumber must be a number');
-      }
+  for (const seated of seating) {
+    if (!seated.rosterId || typeof seated.rosterId !== 'string') {
+      throw new Error('Invalid seating data: rosterId is required for each seated member');
     }
-  }
-
-  // Validate legacy members if present
-  if (hasLegacyFormat && choirData.members) {
-    for (const member of choirData.members) {
-      if (!member.id || typeof member.id !== 'string') {
-        throw new Error('Invalid member data: id is required');
-      }
-      if (!member.name || typeof member.name !== 'string' || member.name.trim().length === 0) {
-        throw new Error('Invalid member data: name is required and cannot be empty');
-      }
-      if (!member.voiceSection || !['Soprano', 'Alto', 'Tenor', 'Bass'].includes(member.voiceSection)) {
-        throw new Error('Invalid member data: voiceSection must be Soprano, Alto, Tenor, or Bass');
-      }
-      if (typeof member.position !== 'number' || member.position < 0) {
-        throw new Error('Invalid member data: position must be a non-negative number');
-      }
-      if (typeof member.rowNumber !== 'number' || member.rowNumber < 0) {
-        throw new Error('Invalid member data: rowNumber must be a non-negative number');
-      }
+    if (typeof seated.position !== 'number') {
+      throw new Error('Invalid seating data: position must be a number');
+    }
+    if (typeof seated.rowNumber !== 'number') {
+      throw new Error('Invalid seating data: rowNumber must be a number');
     }
   }
 }
 
 /**
- * Get member count from choir data (supports both legacy and new formats)
+ * Validate stage settings
  */
-function getMemberCount(choirData: ChoirData): number {
-  // New format: count seating array
-  if (choirData.seating && Array.isArray(choirData.seating)) {
-    return choirData.seating.length;
+function validateSettings(settings: StageSettings): void {
+  if (!settings) {
+    throw new Error('Settings are required');
   }
-  
-  // Legacy format: count members array
-  if (choirData.members && Array.isArray(choirData.members)) {
-    return choirData.members.length;
+
+  if (typeof settings.numberOfRows !== 'number' || settings.numberOfRows < 1) {
+    throw new Error('Invalid settings: numberOfRows must be a positive number');
   }
-  
-  return 0;
+
+  if (!['balanced', 'grid'].includes(settings.alignmentMode)) {
+    throw new Error('Invalid settings: alignmentMode must be "balanced" or "grid"');
+  }
+
+  if (!['left', 'right'].includes(settings.pianoPosition)) {
+    throw new Error('Invalid settings: pianoPosition must be "left" or "right"');
+  }
 }
 
 /**
  * Create a new snapshot for a session
  * 
- * Snapshots store seating arrangements (references to roster members) along with settings.
- * Voice parts configuration is NOT stored in snapshots - it comes from profile-level storage.
- * 
- * New format: choirData.seating contains SeatedMember[] with roster references
- * Legacy format: choirData.members contains full ChoirMember[] data (for backward compatibility)
+ * Snapshots only store seating arrangements (references to roster members) and settings.
+ * The roster and voice parts are stored at session-level.
  */
 export async function createSnapshot(
   sessionCode: string,
   snapshotName: string | undefined,
-  choirData: ChoirData
+  seating: SeatedMember[],
+  settings: StageSettings
 ): Promise<SnapshotItem> {
   // Validate session exists
   const session = await getSession(sessionCode);
@@ -140,13 +97,12 @@ export async function createSnapshot(
     throw new Error('Session not found');
   }
   
-  // Validate choir data
-  validateChoirData(choirData);
+  // Validate seating and settings
+  validateSeating(seating);
+  validateSettings(settings);
   
   // Normalize seating positions to ensure they are non-negative integers
-  if (choirData.seating) {
-    choirData.seating = normalizeSeatingPositions(choirData.seating);
-  }
+  const normalizedSeating = normalizeSeatingPositions(seating);
   
   // Generate or validate snapshot name
   const finalSnapshotName = snapshotName || generateDefaultSnapshotName();
@@ -161,7 +117,8 @@ export async function createSnapshot(
     sessionId: session.sessionId,
     sessionCode: session.sessionCode,
     snapshotName: finalSnapshotName,
-    choirData,
+    seating: normalizedSeating,
+    settings,
     createdAt: now,
     updatedAt: now,
   };
@@ -204,7 +161,7 @@ export async function listSnapshots(sessionCode: string): Promise<SnapshotListIt
     return {
       snapshotId: snapshot.snapshotId,
       snapshotName: snapshot.snapshotName,
-      memberCount: getMemberCount(snapshot.choirData),
+      memberCount: snapshot.seating.length,
       createdAt: snapshot.createdAt,
       updatedAt: snapshot.updatedAt,
     };
@@ -214,10 +171,11 @@ export async function listSnapshots(sessionCode: string): Promise<SnapshotListIt
 /**
  * Get a specific snapshot by ID
  * 
- * Returns the snapshot with seating references. The client is responsible for:
- * 1. Joining seating references with the current profile-level roster
- * 2. Cleaning up orphaned references (members that no longer exist in roster)
- * 3. Applying the current profile-level voice parts configuration
+ * Returns the snapshot with seating references and settings.
+ * The client is responsible for:
+ * 1. Joining seating references with the session-level roster
+ * 2. Showing a toaster error and ignoring members that don't exist in the roster
+ * 3. Using the session-level voice parts configuration
  */
 export async function getSnapshot(
   sessionCode: string,
