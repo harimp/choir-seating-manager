@@ -9,8 +9,10 @@ import {
   StageSettings,
   VoicePartsConfiguration,
   ChoirRoster,
+  RosterMember,
   SeatedMember,
   DisplayMember,
+  ChoirData,
 } from './types';
 import {
   loadChoirData,
@@ -64,7 +66,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
   
   // Orphaned members dialog state
   const [showOrphanedDialog, setShowOrphanedDialog] = useState(false);
-  const [orphanedMembers, setOrphanedMembers] = useState<any[]>([]);
+  const [orphanedMembers, setOrphanedMembers] = useState<RosterMember[]>([]);
   
   // Migration notification state
   const [showMigrationNotification, setShowMigrationNotification] = useState(false);
@@ -424,7 +426,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
     }
   };
 
-  const handleRestoreSnapshot = async (choirData: any) => {
+  const handleRestoreSnapshot = async (choirData: ChoirData) => {
     // Handle both legacy and new format snapshots
     if (choirData.seating) {
       // New format: snapshot contains seating references

@@ -247,6 +247,16 @@ function convertVoicePartIdToLegacySection(voicePartId: string): VoiceSection {
 }
 
 /**
+ * Type for imported data that may contain additional fields
+ */
+interface ImportedData extends ChoirData {
+  voicePartsConfig?: VoicePartsConfiguration;
+  roster?: ChoirRoster;
+  exportVersion?: number;
+  exportDate?: string;
+}
+
+/**
  * Import choir data from file
  * Handles both legacy and new formats, triggers migration if needed
  * Also imports roster data and voice parts configuration if present in the file
@@ -256,7 +266,7 @@ export async function importChoirData(file: File): Promise<{ data: ChoirData; mi
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const importedData = JSON.parse(e.target?.result as string) as any;
+        const importedData = JSON.parse(e.target?.result as string) as ImportedData;
         const migration: MigrationResult = { wasMigrated: false };
         let hasOrphanedMembers = false;
         
@@ -297,7 +307,7 @@ export async function importChoirData(file: File): Promise<{ data: ChoirData; mi
           console.log('Importing legacy format data...');
           
           // Ensure members have required fields
-          const legacyMembers = importedData.members.map((member: any) => ({
+          const legacyMembers = (importedData.members || []).map((member) => ({
             ...member,
             rowNumber: member.rowNumber ?? 0,
           }));
