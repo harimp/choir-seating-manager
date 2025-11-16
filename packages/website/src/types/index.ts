@@ -98,16 +98,6 @@ export interface SessionItem {
   updatedAt: string;
 }
 
-// Legacy ChoirData format for backward compatibility
-export interface LegacySessionItem {
-  sessionId: string;
-  sessionCode: string;
-  sessionName: string;
-  choirData: ChoirData;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface CreateSessionRequest {
   sessionCode: string;
   sessionName: string;

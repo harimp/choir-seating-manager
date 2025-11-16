@@ -12,8 +12,6 @@ import {
   RosterMember,
   SeatedMember,
   DisplayMember,
-  LegacySessionItem,
-  ChoirMember,
 } from './types';
 import {
   loadChoirData,
@@ -128,108 +126,33 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
         setError(null);
         const session = await getSession(sessionCode);
         
-        // Check if session has new schema (roster, voiceParts, seating, settings)
-        // or old schema (choirData with members/seating)
-        if (session.roster && session.voiceParts && session.seating !== undefined && session.settings) {
-          // New schema - load directly from session
-          const sessionRoster: ChoirRoster = {
-            members: session.roster,
-            version: 1,
-          };
-          setRoster(sessionRoster);
-          setVoicePartsConfig(session.voiceParts);
-          
-          // Check for orphaned seating references (members that don't exist in session roster)
-          const rosterIds = new Set(session.roster.map(m => m.id));
-          const orphanedSeating = session.seating.filter(s => !rosterIds.has(s.rosterId));
-          
-          if (orphanedSeating.length > 0) {
-            console.warn(`Found ${orphanedSeating.length} orphaned seating reference(s) in session`);
-            // Show toaster error as requested
-            setTimeout(() => {
-              alert(`Warning: ${orphanedSeating.length} member(s) in the seating arrangement no longer exist in the roster and were ignored.`);
-            }, 500);
-            
-            // Filter out orphaned references
-            const cleanedSeating = session.seating.filter(s => rosterIds.has(s.rosterId));
-            setSeating(cleanedSeating);
-          } else {
-            setSeating(session.seating);
-          }
-          
-          setSettings(session.settings);
-        } else if ('choirData' in session) {
-          // Old schema - migrate to new format
-          console.log('Migrating session from old schema to new schema...');
-          const legacySession = session as unknown as LegacySessionItem;
-          const choirData = legacySession.choirData;
-          
-          // Convert legacy members to roster + seating
-          let migratedRoster: RosterMember[] = [];
-          let migratedSeating: SeatedMember[] = [];
-          
-          if (choirData.members) {
-            // Legacy format with full member data
-            migratedRoster = choirData.members.map((member: ChoirMember) => ({
-              id: member.id,
-              name: member.name,
-              voicePartId: member.voiceSection.toLowerCase(), // Convert "Soprano" -> "soprano"
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }));
-            
-            migratedSeating = choirData.members.map((member: ChoirMember) => ({
-              rosterId: member.id,
-              position: member.position,
-              rowNumber: member.rowNumber,
-            }));
-          } else if (choirData.seating) {
-            // Already has seating references but no roster - use local roster
-            migratedRoster = loadedRoster.members;
-            migratedSeating = choirData.seating;
-          }
-          
-          // Use default voice parts or loaded config
-          const migratedVoiceParts = config;
-          const migratedSettings = choirData.settings;
-          
-          // Save migrated session back to database
-          try {
-            await updateSession(
-              sessionCode,
-              migratedRoster,
-              migratedVoiceParts,
-              migratedSeating,
-              migratedSettings
-            );
-            console.log('Session migrated successfully');
-          } catch (migrationErr) {
-            console.error('Error saving migrated session:', migrationErr);
-            // Continue anyway with local state
-          }
-          
-          // Set state with migrated data
-          const sessionRoster: ChoirRoster = {
-            members: migratedRoster,
-            version: 1,
-          };
-          setRoster(sessionRoster);
-          setVoicePartsConfig(migratedVoiceParts);
-          setSeating(migratedSeating);
-          setSettings(migratedSettings);
-          
-          // Show migration notification
+        // Load session data
+        const sessionRoster: ChoirRoster = {
+          members: session.roster,
+          version: 1,
+        };
+        setRoster(sessionRoster);
+        setVoicePartsConfig(session.voiceParts);
+        
+        // Check for orphaned seating references (members that don't exist in session roster)
+        const rosterIds = new Set(session.roster.map(m => m.id));
+        const orphanedSeating = session.seating.filter(s => !rosterIds.has(s.rosterId));
+        
+        if (orphanedSeating.length > 0) {
+          console.warn(`Found ${orphanedSeating.length} orphaned seating reference(s) in session`);
+          // Show toaster error as requested
           setTimeout(() => {
-            alert('Session has been automatically upgraded to the new format.');
+            alert(`Warning: ${orphanedSeating.length} member(s) in the seating arrangement no longer exist in the roster and were ignored.`);
           }, 500);
+          
+          // Filter out orphaned references
+          const cleanedSeating = session.seating.filter(s => rosterIds.has(s.rosterId));
+          setSeating(cleanedSeating);
         } else {
-          // Unknown format
-          console.error('Session has unknown format');
-          setError('This session has an unknown format. Please create a new session.');
-          setIsLoading(false);
-          isInitialLoadRef.current = false;
-          return;
+          setSeating(session.seating);
         }
+        
+        setSettings(session.settings);
         setIsLoading(false);
         isInitialLoadRef.current = false;
       } catch (err) {
