@@ -7,7 +7,7 @@ A web application for managing and displaying choir standing orders, built with 
 - **Member Management**: Add, remove, and organize choir members by voice section (Soprano, Alto, Tenor, Bass)
 - **Standing Order Display**: Visual display of choir arrangement by section
 - **Position Control**: Move members up/down within their sections
-- **Data Persistence**: localStorage for client-side data storage
+- **Data Persistence**: Session-based API storage (no localStorage to prevent data merging)
 - **Import/Export**: JSON-based backup and restore functionality
 - **Responsive Design**: Mobile and desktop-friendly interface
 - **AWS Deployment**: CloudFront CDN distribution with S3 hosting
@@ -131,7 +131,7 @@ yarn cdk deploy   # Deploy the stack
 - **TypeScript**: Type safety
 - **Vite**: Fast build tool
 - **SCSS**: Styling with variables and nesting
-- **localStorage**: Client-side data persistence
+- **Session API**: Server-side data persistence (localStorage removed)
 
 ### AWS Infrastructure
 - **S3**: Static website hosting

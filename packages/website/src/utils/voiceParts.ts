@@ -26,52 +26,21 @@ const AVAILABLE_COLORS = [
 ];
 
 /**
- * Load voice parts configuration from localStorage
- * Returns default SATB configuration if none exists
+ * Load voice parts configuration (localStorage removed)
+ * Returns default SATB configuration
  */
 export function loadVoicePartsConfig(): VoicePartsConfiguration {
-  try {
-    const stored = localStorage.getItem(VOICE_PARTS_STORAGE_KEY);
-    if (!stored) {
-      return DEFAULT_VOICE_PARTS;
-    }
-    
-    const config = JSON.parse(stored) as VoicePartsConfiguration;
-    
-    // Validate structure
-    if (!config.parts || !Array.isArray(config.parts) || !config.version) {
-      console.warn('Invalid voice parts configuration, using default');
-      return DEFAULT_VOICE_PARTS;
-    }
-    
-    return config;
-  } catch (error) {
-    console.error('Error loading voice parts configuration:', error);
-    return DEFAULT_VOICE_PARTS;
-  }
+  // Always return default SATB configuration (localStorage disabled)
+  return DEFAULT_VOICE_PARTS;
 }
 
 /**
- * Save voice parts configuration to localStorage
+ * Save voice parts configuration (localStorage removed)
+ * No-op function to prevent data merging across sessions
  */
 export function saveVoicePartsConfig(config: VoicePartsConfiguration): void {
-  try {
-    // Validate configuration before saving
-    if (!config.parts || !Array.isArray(config.parts)) {
-      throw new Error('Invalid voice parts configuration structure');
-    }
-    
-    localStorage.setItem(VOICE_PARTS_STORAGE_KEY, JSON.stringify(config));
-  } catch (error) {
-    console.error('Error saving voice parts configuration:', error);
-    
-    // Check if it's a quota exceeded error
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      throw new Error('Storage quota exceeded. Please reduce the number of voice parts or export your data.');
-    }
-    
-    throw new Error('Failed to save voice parts configuration. Please try again.');
-  }
+  // No-op: localStorage removed to prevent data merging across sessions
+  console.log('saveVoicePartsConfig called (localStorage disabled)');
 }
 
 /**

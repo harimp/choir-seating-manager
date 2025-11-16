@@ -16,7 +16,6 @@ import {
 } from './types';
 import {
   loadChoirData,
-  saveChoirData,
   exportChoirData,
   importChoirData,
   MigrationResult,
@@ -97,7 +96,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
         }
         
         if (!sessionCode) {
-          // No session code, use localStorage
+          // No session code - start with empty data (localStorage disabled)
           const { data, migration } = loadChoirData();
           
           // Check if migration occurred
@@ -233,18 +232,9 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
       window.clearTimeout(saveTimeoutRef.current);
     }
 
-    // If no session code, just save to localStorage
+    // If no session code, skip saving (localStorage disabled)
     if (!sessionCode) {
-      try {
-        saveChoirData({
-          seating,
-          settings,
-          lastUpdated: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error('Failed to save choir data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to save choir data');
-      }
+      console.log('No session code - data not persisted (localStorage disabled)');
       return;
     }
 
@@ -645,8 +635,7 @@ function ChoirManager({ sessionCode }: ChoirManagerProps) {
 function SessionView() {
   const { sessionCode } = useParams<{ sessionCode: string }>();
   
-  // For now, just show the choir manager with localStorage
-  // Later, this will load data from DynamoDB using the sessionCode
+  // Load data from DynamoDB using the sessionCode
   return <ChoirManager sessionCode={sessionCode} />;
 }
 

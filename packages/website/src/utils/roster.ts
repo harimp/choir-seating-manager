@@ -10,32 +10,11 @@ function generateId(): string {
 }
 
 /**
- * Load choir roster from localStorage
- * Returns empty roster if none exists
+ * Load choir roster (localStorage removed)
+ * Returns empty roster
  */
 export function loadChoirRoster(): ChoirRoster {
-  try {
-    const stored = localStorage.getItem(ROSTER_STORAGE_KEY);
-    if (stored) {
-      const roster = JSON.parse(stored) as ChoirRoster;
-      
-      // Validate roster structure
-      if (!roster.members || !Array.isArray(roster.members)) {
-        console.warn('Invalid roster structure, returning empty roster');
-        return {
-          members: [],
-          version: 1,
-        };
-      }
-      
-      return roster;
-    }
-  } catch (error) {
-    console.error('Error loading choir roster:', error);
-    // Return empty roster on error to prevent app crash
-  }
-
-  // Return empty roster with version 1
+  // Return empty roster with version 1 (localStorage disabled)
   return {
     members: [],
     version: 1,
@@ -43,21 +22,12 @@ export function loadChoirRoster(): ChoirRoster {
 }
 
 /**
- * Save choir roster to localStorage
+ * Save choir roster (localStorage removed)
+ * No-op function to prevent data merging across sessions
  */
 export function saveChoirRoster(roster: ChoirRoster): void {
-  try {
-    localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(roster));
-  } catch (error) {
-    console.error('Error saving choir roster:', error);
-    
-    // Check if it's a quota exceeded error
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      throw new Error('Storage quota exceeded. Please remove some members or export your data.');
-    }
-    
-    throw new Error('Failed to save choir roster. Please try again.');
-  }
+  // No-op: localStorage removed to prevent data merging across sessions
+  console.log('saveChoirRoster called (localStorage disabled)');
 }
 
 /**

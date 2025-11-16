@@ -40,6 +40,17 @@ function isNewFormat(data: ChoirData): boolean {
 export function loadChoirData(): { data: ChoirData; migration: MigrationResult } {
   const migration: MigrationResult = { wasMigrated: false };
   
+  // Return empty data in new format (no localStorage)
+  return {
+    data: {
+      seating: [],
+      settings: DEFAULT_SETTINGS,
+      lastUpdated: new Date().toISOString(),
+    },
+    migration,
+  };
+  
+  /* Removed localStorage usage
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -131,28 +142,13 @@ export function loadChoirData(): { data: ChoirData; migration: MigrationResult }
     },
     migration,
   };
+  */
 }
 
 export function saveChoirData(data: ChoirData): void {
-  try {
-    // Always save in new format with seating references
-    const dataToSave: ChoirData = {
-      seating: data.seating || [],
-      settings: data.settings,
-      lastUpdated: new Date().toISOString(),
-    };
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  } catch (error) {
-    console.error('Error saving choir data:', error);
-    
-    // Check if it's a quota exceeded error
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      throw new Error('Storage quota exceeded. Please clear some data or export your current data.');
-    }
-    
-    throw new Error('Failed to save choir data. Please try again.');
-  }
+  // No-op: localStorage removed to prevent data merging across sessions
+  // Data is now only saved via API when a session code is provided
+  console.log('saveChoirData called (localStorage disabled)');
 }
 
 /**
