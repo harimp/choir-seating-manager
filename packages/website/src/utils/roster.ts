@@ -1,7 +1,5 @@
 import { ChoirRoster, RosterMember, SeatedMember } from '../types';
 
-const ROSTER_STORAGE_KEY = 'choir-member-roster';
-
 /**
  * Generate a unique ID for roster members
  */
@@ -25,7 +23,7 @@ export function loadChoirRoster(): ChoirRoster {
  * Save choir roster (localStorage removed)
  * No-op function to prevent data merging across sessions
  */
-export function saveChoirRoster(roster: ChoirRoster): void {
+export function saveChoirRoster(_roster: ChoirRoster): void {
   // No-op: localStorage removed to prevent data merging across sessions
   console.log('saveChoirRoster called (localStorage disabled)');
 }

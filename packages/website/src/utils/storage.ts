@@ -3,8 +3,6 @@ import { loadChoirRoster, saveChoirRoster } from './roster';
 import { migrateLegacyMembers } from './seating';
 import { loadVoicePartsConfig, saveVoicePartsConfig } from './voiceParts';
 
-const STORAGE_KEY = 'choir-seating-data';
-
 const DEFAULT_SETTINGS: StageSettings = {
   numberOfRows: 3,
   alignmentMode: 'balanced',
@@ -145,7 +143,7 @@ export function loadChoirData(): { data: ChoirData; migration: MigrationResult }
   */
 }
 
-export function saveChoirData(data: ChoirData): void {
+export function saveChoirData(_data: ChoirData): void {
   // No-op: localStorage removed to prevent data merging across sessions
   // Data is now only saved via API when a session code is provided
   console.log('saveChoirData called (localStorage disabled)');

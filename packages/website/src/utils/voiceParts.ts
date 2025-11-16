@@ -7,8 +7,6 @@ import {
   VoiceSection,
 } from '../types';
 
-const VOICE_PARTS_STORAGE_KEY = 'choir-voice-parts-config';
-
 // Available colors for new voice parts
 const AVAILABLE_COLORS = [
   '#FF69B4', // Pink (Soprano default)
@@ -38,7 +36,7 @@ export function loadVoicePartsConfig(): VoicePartsConfiguration {
  * Save voice parts configuration (localStorage removed)
  * No-op function to prevent data merging across sessions
  */
-export function saveVoicePartsConfig(config: VoicePartsConfiguration): void {
+export function saveVoicePartsConfig(_config: VoicePartsConfiguration): void {
   // No-op: localStorage removed to prevent data merging across sessions
   console.log('saveVoicePartsConfig called (localStorage disabled)');
 }
