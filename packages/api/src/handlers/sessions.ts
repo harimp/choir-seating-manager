@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
-import { SessionItem, RosterMember, VoicePartsConfiguration, SeatedMember, StageSettings } from '../types';
+import { SessionItem, RosterMember, VoicePartsConfiguration, SeatedMember, StageSettings, isSpacingObject } from '../types';
 import { normalizeSeatingPositions } from '../utils/seating';
 
 const client = new DynamoDBClient({});
@@ -67,9 +67,13 @@ function validateSeating(seating: SeatedMember[], roster: RosterMember[]): void 
     if (!seated.rosterId || typeof seated.rosterId !== 'string') {
       throw new Error('Invalid seating data: rosterId is required for each seated member');
     }
-    if (!rosterIds.has(seated.rosterId)) {
+    
+    // Allow spacing objects (rosterId starts with 'spacing-')
+    // Regular members must exist in roster
+    if (!isSpacingObject(seated.rosterId) && !rosterIds.has(seated.rosterId)) {
       throw new Error(`Invalid seating data: rosterId ${seated.rosterId} not found in roster`);
     }
+    
     if (typeof seated.position !== 'number') {
       throw new Error('Invalid seating data: position must be a number');
     }
@@ -91,8 +95,8 @@ function validateSettings(settings: StageSettings): void {
     throw new Error('Invalid settings: numberOfRows must be a positive number');
   }
 
-  if (!['balanced', 'grid'].includes(settings.alignmentMode)) {
-    throw new Error('Invalid settings: alignmentMode must be "balanced" or "grid"');
+  if (!['balanced', 'grid', 'custom'].includes(settings.alignmentMode)) {
+    throw new Error('Invalid settings: alignmentMode must be "balanced", "grid", or "custom"');
   }
 
   if (!['left', 'right'].includes(settings.pianoPosition)) {
