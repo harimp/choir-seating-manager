@@ -1,6 +1,6 @@
 export type VoiceSection = 'Soprano' | 'Alto' | 'Tenor' | 'Bass';
 
-export type AlignmentMode = 'balanced' | 'grid' | 'custom';
+export type AlignmentMode = 'balanced' | 'grid';
 export type PianoPosition = 'left' | 'right';
 
 // Voice Parts Configuration
@@ -55,7 +55,6 @@ export interface DisplayMember {
   voicePartId: string;     // from roster
   position: number;        // from seating
   rowNumber: number;       // from seating
-  isSpacing?: boolean;     // Flag to identify spacing objects in UI
 }
 
 // Legacy ChoirMember interface (for backward compatibility)
@@ -136,24 +135,4 @@ export interface SnapshotListItem {
   memberCount: number;
   createdAt: string;
   updatedAt: string;
-}
-
-// Spacing Object Utilities
-/**
- * Check if a rosterId represents a spacing object
- */
-export function isSpacingObject(rosterId: string): boolean {
-  return rosterId.startsWith('spacing-');
-}
-
-/**
- * Create a new spacing object with a unique ID
- */
-export function createSpacingObject(position: number, rowNumber: number): SeatedMember {
-  const { randomUUID } = require('crypto');
-  return {
-    rosterId: `spacing-${randomUUID()}`,
-    position,
-    rowNumber,
-  };
 }
