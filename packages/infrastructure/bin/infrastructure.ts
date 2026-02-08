@@ -3,6 +3,7 @@ import { App } from 'aws-cdk-lib';
 import 'source-map-support/register';
 import { DomainStack } from '../lib/domain-stack';
 import { WebsiteStack } from '../lib/website-stack';
+import { BetaWebsiteStack } from '../lib/beta-website-stack';
 import { DataPlaneStack } from '../lib/data-plane-stack';
 
 const app = new App();
@@ -29,6 +30,12 @@ new WebsiteStack(app, 'ChoirSeatingManagerStack', {
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
   },
   description: 'Choir Seating Manager - Static Website on S3 + CloudFront',
+  domainStack,
+});
+
+new BetaWebsiteStack(app, 'BetaWebsiteStack', {
+  env,
+  description: 'Choir Seating Manager - Beta Website (v2) on S3 + CloudFront',
   domainStack,
 });
 

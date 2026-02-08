@@ -23,11 +23,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       
-      - name: Lint website
+      - name: Lint website (v1)
         run: yarn workspace website lint
       
-      - name: Build website
+      - name: Lint website-v2 (beta)
+        run: yarn workspace website-v2 lint
+      
+      - name: Build website (v1)
         run: yarn workspace website build
+      
+      - name: Build website-v2 (beta)
+        run: yarn workspace website-v2 build
       
       - name: Build infrastructure
         run: yarn workspace infrastructure build
