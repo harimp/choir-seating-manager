@@ -8,6 +8,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@choir-seating-manager/shared-v2": "0.0.1",
     "@aws-sdk/client-dynamodb": "^3.470.0",
     "@aws-sdk/lib-dynamodb": "^3.470.0"
   },

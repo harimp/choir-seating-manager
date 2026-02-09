@@ -7,7 +7,9 @@
   ],
   "scripts": {
     "dev": "yarn workspace website dev",
+    "dev:v2": "yarn workspace website-v2 dev",
     "build": "yarn workspace website build",
+    "build:v2": "yarn workspace website-v2 build",
     "preview": "yarn workspace website preview",
     "cdk": "yarn workspace infrastructure cdk",
     "deploy": "yarn workspace website build && yarn workspace infrastructure cdk deploy",
